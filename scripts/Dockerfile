@@ -1,5 +1,5 @@
 FROM alpine:3.16 AS builder
-LABEL maintainer="tindy.it@gmail.com"
+LABEL maintainer="dev@leroytop.com"
 ARG THREADS="4"
 ARG SHA=""
 
@@ -52,7 +52,7 @@ RUN set -xe && \
 
 # build final image
 FROM alpine:3.16
-LABEL maintainer="tindy.it@gmail.com"
+LABEL maintainer="dev@leroytop.com"
 
 RUN apk add --no-cache --virtual subconverter-deps pcre2 libcurl yaml-cpp
 
@@ -65,6 +65,6 @@ RUN echo $TZ > /etc/timezone
 
 # set entry
 WORKDIR /base
-CMD subconverter
+CMD ["subconverter"]
 
 EXPOSE 25500/tcp
