@@ -90,6 +90,16 @@ jobs:
           tags: ${{ steps.tags.outputs.tags }}
           labels: ${{ steps.labels.outputs.labels }}
 
+      - name: Generate release notes
+        id: release_notes
+        env:
+          RELEASE_TAG: ${{ steps.tags.outputs.version }}
+          RELEASE_CONFIG: .github/release.yml
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          SHA_SHORT: ${{ steps.vars.outputs.sha_short }}
+        run: ./.github/scripts/generate-release-notes-from-commits.sh
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -100,5 +110,5 @@ jobs:
           else
             gh release create "$version" \
               --title "$version" \
-              --generate-notes
+              --notes-file "${{ steps.release_notes.outputs.path }}"
           fi

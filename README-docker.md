@@ -95,7 +95,9 @@ ghcr.io/leroy20317/subconverter
 - 手动推送版本 tag 不会直接触发 `docker.yml`；需要手动运行 `docker.yml` 并选择对应 tag 作为 ref。
 - 当 `tag-on-version-change.yml` 自动创建版本 tag 时，会额外通过 `workflow_dispatch` 派发一次 `docker.yml`，以绕过 `GITHUB_TOKEN` 推送 tag 不会继续触发 workflow 的限制。
 - 发布成功后，镜像会附带 `vX.Y.Z`、`latest` 与 `sha-<commit>` 标签。
-- Docker 镜像推送成功后，工作流会自动创建同名的 GitHub Release，并使用 GitHub 自动生成发布说明。
+- Docker 镜像推送成功后，工作流会自动创建同名的 GitHub Release，并调用 [`.github/scripts/generate-release-notes-from-commits.sh`](./.github/scripts/generate-release-notes-from-commits.sh) 基于上一个版本 tag 到当前 tag 之间的 commit 生成 changelog。
+- 该脚本会直接读取 [`.github/release.yml`](./.github/release.yml) 中的 `changelog.categories` 与 `exclude.authors`，因此调整 Release 分类标题或排除作者时不需要再改脚本。
+- 脚本默认仍会额外过滤 `chore: update version ...` 这类纯版本号提交，避免 Release 页面出现无意义的版本 bump 记录。
 - 如需补发失败的版本镜像，可以手动运行 `docker.yml`，但必须选择对应的版本 tag 作为 ref。
 - 发布流程使用默认 `GITHUB_TOKEN`，不需要额外配置发布密钥。
 
