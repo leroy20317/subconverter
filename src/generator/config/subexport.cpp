@@ -2265,26 +2265,36 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                 if (method == "auto")
                     method = "chacha20-ietf-poly1305";
 
-                proxy = "vmess," + hostname + "," + port + "," + method + ",\"" + id + "\",over-tls=" +
-                        (tlssecure ? "true" : "false");
+                proxy = "vmess," + hostname + "," + port + "," + method + ",\"" + id + "\"";
 
-                if (!sni.empty())
-                    host = sni;
-
-                if (tlssecure)
-                    proxy += ",tls-name=" + host;
                 switch (hash_(transproto)) {
                     case "tcp"_hash:
                         proxy += ",transport=tcp";
                         break;
                     case "ws"_hash:
-                        proxy += ",transport=ws,path=" + path + ",host=" + host;
+                        proxy += ",transport=ws";
+                        if (!path.empty())
+                            proxy += ",path=" + path;
+                        if (!host.empty())
+                            proxy += ",host=" + host;
+                        break;
+                    case "http"_hash:
+                        proxy += ",transport=http";
+                        if (!path.empty())
+                            proxy += ",path=" + path;
+                        if (!host.empty())
+                            proxy += ",host=" + host;
                         break;
                     default:
                         continue;
                 }
+                proxy += ",alterId=" + aid;
+                proxy += ",over-tls=" + std::string(tlssecure ? "true" : "false");
+                if (tlssecure)
+                    proxy += ",sni=" + (sni.empty() ? hostname : sni);
                 if (!scv.is_undef())
                     proxy += ",skip-cert-verify=" + std::string(scv.get() ? "true" : "false");
+                proxy += ",udp=" + std::string(udp.get() ? "true" : "false");
                 break;
             case ProxyType::VLESS:
                 if (flow != "xtls-rprx-vision") {
@@ -2411,7 +2421,7 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                 proxy += ",fast-open=false";
             }
         }
-        if (ext.udp) {
+        if (ext.udp && x.Type != ProxyType::VMess && x.Type != ProxyType::VLESS) {
             proxy += ",udp=true";
         } else {
             if (x.Type == ProxyType::Hysteria2) {
