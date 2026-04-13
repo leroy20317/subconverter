@@ -44,10 +44,11 @@ strip_yaml_quotes() {
   printf '%s\n' "$value"
 }
 
-declare -a excluded_authors
-declare -a category_titles
-declare -a category_labels
-declare -a category_files
+# Bash 5 + set -u：`declare -a arr` 须带 =()，否则 ${#arr[@]} 可能报 unbound。
+declare -a excluded_authors=()
+declare -a category_titles=()
+declare -a category_labels=()
+declare -a category_files=()
 declare -i recorded_commits=0
 declare -i fallback_index=-1
 
