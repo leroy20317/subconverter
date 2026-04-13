@@ -81,7 +81,7 @@ void anyTlSConstruct(Proxy &node, const std::string &group, const std::string &r
                        const std::string &host, const std::vector<String> &AlpnList,
                        const std::string &fingerprint,
                        const std::string &sni, tribool udp = tribool(), tribool tfo = tribool(), tribool scv = tribool(),
-                     tribool tls13 = tribool(),const std::string& underlying_proxy="",uint16_t idleSessionCheckInterval=30,uint16_t idleSessionTimeout=30,uint16_t minIdleSession=0);
+                     tribool tls13 = tribool(),const std::string& underlying_proxy="",uint16_t idleSessionCheckInterval=30,uint16_t idleSessionTimeout=30,uint16_t minIdleSession=1,uint16_t maxStreamCount=1);
 void snellConstruct(Proxy &node, const std::string &group, const std::string &remarks, const std::string &server,
                     const std::string &port, const std::string &password, const std::string &obfs,
                     const std::string &host, uint16_t version = 0, tribool udp = tribool(), tribool tfo = tribool(),

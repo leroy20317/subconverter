@@ -89,7 +89,8 @@ struct Proxy {
     String AuthStr;
     uint16_t IdleSessionCheckInterval=30;
     uint16_t IdleSessionTimeout=30;
-    uint16_t MinIdleSession=0;
+    uint16_t MinIdleSession=1;
+    uint16_t MaxStreamCount=1;
     String TLSStr;
     bool TLSSecure = false;
 

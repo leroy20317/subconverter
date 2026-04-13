@@ -2433,6 +2433,22 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                 if (!scv.is_undef())
                     proxy += ",skip-cert-verify=" + std::string(scv.get() ? "true" : "false");
                 break;
+            case ProxyType::AnyTLS:
+                proxy = "AnyTLS," + hostname + "," + port + ",\"" + password + "\"";
+                proxy += ",idle-session-check-interval=" + std::to_string(x.IdleSessionCheckInterval);
+                proxy += ",idle-session-timeout=" + std::to_string(x.IdleSessionTimeout);
+                proxy += ",min-idle-session=" + std::to_string(x.MinIdleSession);
+                proxy += ",max-stream-count=" + std::to_string(x.MaxStreamCount);
+                if (!x.SNI.empty()) {
+                    proxy += ",sni=" + x.SNI;
+                }
+                if (!x.AlpnList.empty()) {
+                    proxy += ",alpn=" + x.AlpnList[0];
+                }
+                if (!scv.is_undef()) {
+                    proxy += ",skip-cert-verify=" + std::string(scv.get() ? "true" : "false");
+                }
+                break;
             default:
                 continue;
         }
@@ -2444,7 +2460,8 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                 proxy += ",fast-open=false";
             }
         }
-        if (ext.udp && x.Type != ProxyType::VMess && x.Type != ProxyType::VLESS && x.Type != ProxyType::Trojan) {
+        if (ext.udp && x.Type != ProxyType::VMess && x.Type != ProxyType::VLESS && x.Type != ProxyType::Trojan &&
+            x.Type != ProxyType::AnyTLS) {
             proxy += ",udp=true";
         } else {
             if (x.Type == ProxyType::Hysteria2) {

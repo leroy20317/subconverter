@@ -211,7 +211,7 @@ void anyTlSConstruct(Proxy &node, const std::string &group, const std::string &r
                      const std::string &sni, tribool udp,
                      tribool tfo, tribool scv,
                      tribool tls13, const std::string &underlying_proxy, uint16_t idleSessionCheckInterval,
-                     uint16_t idleSessionTimeout, uint16_t minIdleSession) {
+                     uint16_t idleSessionTimeout, uint16_t minIdleSession, uint16_t maxStreamCount) {
     commonConstruct(node, ProxyType::AnyTLS, group, remarks, host, port, udp, tfo, scv, tls13, underlying_proxy);
     node.Host = trim(host);
     node.Password = password;
@@ -221,6 +221,7 @@ void anyTlSConstruct(Proxy &node, const std::string &group, const std::string &r
     node.IdleSessionCheckInterval = idleSessionCheckInterval;
     node.IdleSessionTimeout = idleSessionTimeout;
     node.MinIdleSession = minIdleSession;
+    node.MaxStreamCount = maxStreamCount;
 }
 
 void mieruConstruct(Proxy &node, const std::string &group, const std::string &remarks,
@@ -1567,10 +1568,11 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                               tribool(), scv, reduceRtt, disableSni, request_timeout, underlying_proxy);
 
                 break;
-            case "anytls"_hash:
+            case "anytls"_hash: {
                 group = ANYTLS_DEFAULT_GROUP;
                 singleproxy["password"] >>= password;
                 singleproxy["sni"] >>= sni;
+                uint16_t idleSessionCheckInterval = 30, idleSessionTimeout = 30, minIdleSession = 1, maxStreamCount = 1;
 
                 if (!singleproxy["alpn"].IsNull() && singleproxy["alpn"].size() >= 1) {
                     singleproxy["alpn"][0] >>= alpn;
@@ -1581,10 +1583,20 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                     }
                 }
                 singleproxy["fingerprint"] >>= fingerprint;
+                if (!singleproxy["idle-session-check-interval"].IsNull())
+                    singleproxy["idle-session-check-interval"] >>= idleSessionCheckInterval;
+                if (!singleproxy["idle-session-timeout"].IsNull())
+                    singleproxy["idle-session-timeout"] >>= idleSessionTimeout;
+                if (!singleproxy["min-idle-session"].IsNull())
+                    singleproxy["min-idle-session"] >>= minIdleSession;
+                if (!singleproxy["max-stream-count"].IsNull())
+                    singleproxy["max-stream-count"] >>= maxStreamCount;
                 anyTlSConstruct(node, ANYTLS_DEFAULT_GROUP, ps, port, password, server, alpns, fingerprint, sni,
                                 udp,
-                                tribool(), scv, tribool(), underlying_proxy, 30, 30, 0);
+                                tribool(), scv, tribool(), underlying_proxy, idleSessionCheckInterval,
+                                idleSessionTimeout, minIdleSession, maxStreamCount);
                 break;
+            }
             case "mieru"_hash:
                 group = MIERU_DEFAULT_GROUP;
                 singleproxy["password"] >>= password;
@@ -3094,14 +3106,24 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
                                           obfsParam, insecure, ports, sni,
                                           udp, tfo, scv, tribool(), underlying_proxy);
                         break;
-                    case "anytls"_hash:
+                    case "anytls"_hash: {
                         group = ANYTLS_DEFAULT_GROUP;
                         password = GetMember(singboxNode, "password");
+                        uint16_t idleSessionCheckInterval =
+                                static_cast<uint16_t>(to_int(GetMember(singboxNode, "idle_session_check_interval"), 30));
+                        uint16_t idleSessionTimeout =
+                                static_cast<uint16_t>(to_int(GetMember(singboxNode, "idle_session_timeout"), 30));
+                        uint16_t minIdleSession =
+                                static_cast<uint16_t>(to_int(GetMember(singboxNode, "min_idle_session"), 1));
+                        uint16_t maxStreamCount =
+                                static_cast<uint16_t>(to_int(GetMember(singboxNode, "max_stream_count"), 1));
                         anyTlSConstruct(node, ANYTLS_DEFAULT_GROUP, ps, port, password, server, alpnList,
                                         fingerprint, sni,
                                         udp,
-                                        tribool(), scv, tribool(), underlying_proxy, 30, 30, 0);
+                                        tribool(), scv, tribool(), underlying_proxy, idleSessionCheckInterval,
+                                        idleSessionTimeout, minIdleSession, maxStreamCount);
                         break;
+                    }
                     case "hysteria2"_hash:
                         group = HYSTERIA2_DEFAULT_GROUP;
                         password = GetMember(singboxNode, "password");
@@ -3208,6 +3230,7 @@ void explodeAnyTLS(std::string anytls, Proxy &node) {
     std::string add, port, password, remarks, addition, sni, fp;
     std::vector<std::string> alpnList;
     tribool udp, tfo, scv;
+    uint16_t idleSessionCheckInterval = 30, idleSessionTimeout = 30, minIdleSession = 1, maxStreamCount = 1;
     anytls = anytls.substr(9);
     string_size pos;
 
@@ -3261,9 +3284,25 @@ void explodeAnyTLS(std::string anytls, Proxy &node) {
     udp = getUrlArg(addition, "udp");
     tfo = getUrlArg(addition, "tfo");
     scv = getUrlArg(addition, "insecure");
+    std::string idleSessionCheckIntervalStr = getUrlArg(addition, "idle-session-check-interval");
+    if (idleSessionCheckIntervalStr.empty())
+        idleSessionCheckIntervalStr = getUrlArg(addition, "idle_session_check_interval");
+    std::string idleSessionTimeoutStr = getUrlArg(addition, "idle-session-timeout");
+    if (idleSessionTimeoutStr.empty())
+        idleSessionTimeoutStr = getUrlArg(addition, "idle_session_timeout");
+    std::string minIdleSessionStr = getUrlArg(addition, "min-idle-session");
+    if (minIdleSessionStr.empty())
+        minIdleSessionStr = getUrlArg(addition, "min_idle_session");
+    std::string maxStreamCountStr = getUrlArg(addition, "max-stream-count");
+    if (maxStreamCountStr.empty())
+        maxStreamCountStr = getUrlArg(addition, "max_stream_count");
+    idleSessionCheckInterval = static_cast<uint16_t>(to_int(idleSessionCheckIntervalStr, 30));
+    idleSessionTimeout = static_cast<uint16_t>(to_int(idleSessionTimeoutStr, 30));
+    minIdleSession = static_cast<uint16_t>(to_int(minIdleSessionStr, 1));
+    maxStreamCount = static_cast<uint16_t>(to_int(maxStreamCountStr, 1));
 
     anyTlSConstruct(node, ANYTLS_DEFAULT_GROUP, remarks, port, password, add, alpnList, fp, sni, udp, tfo, scv,
-                    tribool(), "", 30, 30, 0);
+                    tribool(), "", idleSessionCheckInterval, idleSessionTimeout, minIdleSession, maxStreamCount);
 }
 
 void explode(const std::string &link, Proxy &node) {
