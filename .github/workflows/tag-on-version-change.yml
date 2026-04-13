@@ -31,7 +31,7 @@ jobs:
       - name: Read version
         id: version
         run: |
-          version="$(sed -n 's/^#define VERSION \"\\(v[^"]*\\)\"$/\\1/p' src/version.h)"
+          version="$(awk -F'"' '/^#define VERSION "/ { print $2; exit }' src/version.h)"
           if [ -z "$version" ]; then
             echo "Failed to parse version from src/version.h" >&2
             exit 1
