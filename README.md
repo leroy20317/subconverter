@@ -2,7 +2,7 @@
 
 Utility to convert between various proxy subscription formats.
 
-Original upstream: https://github.com/tindy2013/subconverter
+Original upstream: https://github.com/tindy2013/subconverter  
 Current repository: https://github.com/leroy20317/subconverter
 
 [![Docker Image](https://github.com/leroy20317/subconverter/actions/workflows/docker.yml/badge.svg)](https://github.com/leroy20317/subconverter/actions/workflows/docker.yml)
@@ -63,26 +63,26 @@ When `api_mode=false`, two extra local/debug endpoints are available:
 
 ## Supported Targets
 
-| Type                              | As Source | As Target | `target` value |
-| --------------------------------- | :-------: | :-------: | -------------- |
-| Clash                             |     ✓     |     ✓     | `clash`        |
-| ClashR                            |     ✓     |     ✓     | `clashr`       |
-| Quantumult                        |     ✓     |     ✓     | `quan`         |
-| Quantumult X                      |     ✓     |     ✓     | `quanx`        |
-| Loon                              |     ✓     |     ✓     | `loon`         |
-| Mellow                            |     ✓     |     ✓     | `mellow`       |
-| Surfboard                         |     ✓     |     ✓     | `surfboard`    |
-| Surge                             |     ✓     |     ✓     | `surge`        |
-| SS (SIP002)                       |     ✓     |     ✓     | `ss`           |
-| SS Android / SIP008               |     ✓     |     ✓     | `sssub`        |
-| SSD                               |     ✓     |     ✓     | `ssd`          |
-| SSR                               |     ✓     |     ✓     | `ssr`          |
-| Trojan                            |     ✓     |     ✓     | `trojan`       |
-| V2Ray                             |     ✓     |     ✓     | `v2ray`        |
-| sing-box                          |     ✓     |     ✓     | `singbox`      |
-| Telegram-like HTTP / Socks links  |     ✓     |     ×     | Source only    |
-| Mixed single-node subscription    |     ×     |     ✓     | `mixed`        |
-| Auto by `User-Agent`              |     ×     |     ✓     | `auto`         |
+| Type                             | As Source | As Target | `target` value |
+| -------------------------------- | :-------: | :-------: | -------------- |
+| Clash                            |     ✓     |     ✓     | `clash`        |
+| ClashR                           |     ✓     |     ✓     | `clashr`       |
+| Quantumult                       |     ✓     |     ✓     | `quan`         |
+| Quantumult X                     |     ✓     |     ✓     | `quanx`        |
+| Loon                             |     ✓     |     ✓     | `loon`         |
+| Mellow                           |     ✓     |     ✓     | `mellow`       |
+| Surfboard                        |     ✓     |     ✓     | `surfboard`    |
+| Surge                            |     ✓     |     ✓     | `surge`        |
+| SS (SIP002)                      |     ✓     |     ✓     | `ss`           |
+| SS Android / SIP008              |     ✓     |     ✓     | `sssub`        |
+| SSD                              |     ✓     |     ✓     | `ssd`          |
+| SSR                              |     ✓     |     ✓     | `ssr`          |
+| Trojan                           |     ✓     |     ✓     | `trojan`       |
+| V2Ray                            |     ✓     |     ✓     | `v2ray`        |
+| sing-box                         |     ✓     |     ✓     | `singbox`      |
+| Telegram-like HTTP / Socks links |     ✓     |     ×     | Source only    |
+| Mixed single-node subscription   |     ×     |     ✓     | `mixed`        |
+| Auto by `User-Agent`             |     ×     |     ✓     | `auto`         |
 
 Notes:
 
