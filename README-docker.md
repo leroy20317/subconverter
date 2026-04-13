@@ -92,7 +92,8 @@ ghcr.io/leroy20317/subconverter
 
 - 基础版本号定义在 [`src/version.h`](./src/version.h)。
 - 当 `master` 上的 `src/version.h` 版本号发生变化时，`tag-on-version-change.yml` 会自动创建对应的 `vX.Y.Z` tag。
-- `docker.yml` 会在该 tag 被推送后自动发布镜像，并附带 `vX.Y.Z`、`latest` 与 `sha-<commit>` 标签。
+- `docker.yml` 支持两种发布入口：手动推送版本 tag 时由 tag push 自动触发；由 `tag-on-version-change.yml` 自动创建 tag 时，则会额外通过 `workflow_dispatch` 派发一次 Docker 发布。
+- 发布成功后，镜像会附带 `vX.Y.Z`、`latest` 与 `sha-<commit>` 标签。
 - Docker 镜像推送成功后，工作流会自动创建同名的 GitHub Release，并使用 GitHub 自动生成发布说明。
 - 如需补发失败的版本镜像，可以手动运行 `docker.yml`，但必须选择对应的版本 tag 作为 ref。
 - 发布流程使用默认 `GITHUB_TOKEN`，不需要额外配置发布密钥。
