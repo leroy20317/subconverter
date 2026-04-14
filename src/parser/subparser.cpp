@@ -2013,7 +2013,7 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
     const std::string proxystr = "(.*?)\\s*=\\s*(.*)";
 
     for (auto &x: proxies) {
-        std::string remarks, server, port, method, username, password, sni; //common
+        std::string remarks, server, port, method, username, password, sni, underlying_proxy; //common
         std::string plugin, pluginopts, pluginopts_mode, pluginopts_host, mod_url, mod_md5; //ss
         std::string id, net, tls, host, edge, path, fp; //v2
         std::string protocol, protoparam; //ssr
@@ -2085,6 +2085,9 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                         case "tfo"_hash:
                             tfo = itemVal;
                             break;
+                        case "underlying-proxy"_hash:
+                            underlying_proxy = itemVal;
+                            break;
                         default:
                             continue;
                     }
@@ -2095,7 +2098,7 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                 }
 
                 ssConstruct(node, SS_DEFAULT_GROUP, remarks, server, port, password, method, plugin, pluginopts, udp,
-                            tfo, scv);
+                            tfo, scv, tribool(), underlying_proxy);
             }
             //else
             //    continue;
@@ -2132,6 +2135,9 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                         case "tfo"_hash:
                             tfo = itemVal;
                             break;
+                        case "underlying-proxy"_hash:
+                            underlying_proxy = itemVal;
+                            break;
                         default:
                             continue;
                     }
@@ -2142,24 +2148,33 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                 }
 
                 ssConstruct(node, SS_DEFAULT_GROUP, remarks, server, port, password, method, plugin, pluginopts, udp,
-                            tfo, scv);
+                            tfo, scv, tribool(), underlying_proxy);
                 break;
             case "socks5"_hash: //surge 3 style socks5 proxy
                 server = trim(configs[1]);
                 port = trim(configs[2]);
                 if (port == "0")
                     continue;
-                if (configs.size() >= 5) {
+                i = 3;
+                if (configs.size() >= 5 && configs[3].find('=') == std::string::npos &&
+                    configs[4].find('=') == std::string::npos) {
                     username = trim(configs[3]);
                     password = trim(configs[4]);
+                    i = 5;
                 }
-                for (i = 5; i < configs.size(); i++) {
-                    vArray = split(configs[i], "=");
-                    if (vArray.size() < 2)
+                for (; i < configs.size(); i++) {
+                    auto pos = configs[i].find('=');
+                    if (pos == std::string::npos)
                         continue;
-                    itemName = trim(vArray[0]);
-                    itemVal = trim(vArray[1]);
+                    itemName = trim(configs[i].substr(0, pos));
+                    itemVal = trim(configs[i].substr(pos + 1));
                     switch (hash_(itemName)) {
+                        case "username"_hash:
+                            username = itemVal;
+                            break;
+                        case "password"_hash:
+                            password = itemVal;
+                            break;
                         case "udp-relay"_hash:
                             udp = itemVal;
                             break;
@@ -2169,11 +2184,15 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                         case "skip-cert-verify"_hash:
                             scv = itemVal;
                             break;
+                        case "underlying-proxy"_hash:
+                            underlying_proxy = itemVal;
+                            break;
                         default:
                             continue;
                     }
                 }
-                socksConstruct(node, SOCKS_DEFAULT_GROUP, remarks, server, port, username, password, udp, tfo, scv);
+                socksConstruct(node, SOCKS_DEFAULT_GROUP, remarks, server, port, username, password, udp, tfo, scv,
+                               underlying_proxy);
                 break;
             case "vmess"_hash: //surge 4 style vmess proxy
                 server = trim(configs[1]);
@@ -2231,13 +2250,17 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                             break;
                         case "vmess-aead"_hash:
                             aead = itemVal == "true" ? "0" : "1";
+                            break;
+                        case "underlying-proxy"_hash:
+                            underlying_proxy = itemVal;
+                            break;
                         default:
                             continue;
                     }
                 }
 
                 vmessConstruct(node, V2RAY_DEFAULT_GROUP, remarks, server, port, "", id, aead, net, method, path, host,
-                               edge, tls, "", std::vector<std::string>{}, udp, tfo, scv, tls13);
+                               edge, tls, "", std::vector<std::string>{}, udp, tfo, scv, tls13, underlying_proxy);
                 break;
             case "http"_hash: //http proxy
                 server = trim(configs[1]);
@@ -2257,14 +2280,24 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                         case "password"_hash:
                             password = itemVal;
                             break;
+                        case "tls"_hash:
+                            tls = itemVal;
+                            break;
+                        case "tfo"_hash:
+                            tfo = itemVal;
+                            break;
                         case "skip-cert-verify"_hash:
                             scv = itemVal;
+                            break;
+                        case "underlying-proxy"_hash:
+                            underlying_proxy = itemVal;
                             break;
                         default:
                             continue;
                     }
                 }
-                httpConstruct(node, HTTP_DEFAULT_GROUP, remarks, server, port, username, password, false, tfo, scv);
+                httpConstruct(node, HTTP_DEFAULT_GROUP, remarks, server, port, username, password, tls == "true", tfo,
+                              scv, tribool(), underlying_proxy);
                 break;
             case "trojan"_hash: // surge 4 style trojan proxy
                 server = trim(configs[1]);
@@ -2298,6 +2331,9 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                         case "fingerprint"_hash:
                             fp = itemVal;
                             break;
+                        case "underlying-proxy"_hash:
+                            underlying_proxy = itemVal;
+                            break;
                         default:
                             continue;
                     }
@@ -2307,7 +2343,7 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                                 std::vector<std::string>{},
                                 true,
                                 udp,
-                                tfo, scv);
+                                tfo, scv, tribool(), underlying_proxy);
                 break;
             case "snell"_hash:
                 server = trim(configs[1]);
@@ -2343,13 +2379,16 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                         case "version"_hash:
                             version = itemVal;
                             break;
+                        case "underlying-proxy"_hash:
+                            underlying_proxy = itemVal;
+                            break;
                         default:
                             continue;
                     }
                 }
 
                 snellConstruct(node, SNELL_DEFAULT_GROUP, remarks, server, port, password, plugin, host,
-                               to_int(version, 0), udp, tfo, scv);
+                               to_int(version, 0), udp, tfo, scv, underlying_proxy);
                 break;
             case "wireguard"_hash:
                 for (i = 1; i < configs.size(); i++) {
@@ -2364,6 +2403,9 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                             break;
                         case "test-url"_hash:
                             test_url = itemVal;
+                            break;
+                        case "underlying-proxy"_hash:
+                            underlying_proxy = itemVal;
                             break;
                     }
                 }
@@ -2404,7 +2446,7 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                 }
 
                 wireguardConstruct(node, WG_DEFAULT_GROUP, remarks, "", "0", ip, ipv6, private_key, "", "", dns_servers,
-                                   mtu, keepalive, test_url, "", udp, "");
+                                   mtu, keepalive, test_url, "", udp, underlying_proxy);
                 parsePeers(node, peer);
                 break;
             default:
