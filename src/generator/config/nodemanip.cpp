@@ -46,6 +46,7 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
     std::vector<Proxy> nodes;
     Proxy node;
     std::string strSub, extra_headers, custom_group;
+    string_icase_map upstream_request_headers;
 
     // TODO: replace with startsWith if appropriate
     link = replaceAllDistinct(link, "\"", "");
@@ -142,6 +143,14 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
         writeLog(LOG_TYPE_INFO, "Downloading subscription data...");
         if(startsWith(link, "surge:///install-config")) //surge config link
             link = urlDecode(getUrlArg(link, "url"));
+        if(request_headers)
+        {
+            upstream_request_headers = *request_headers;
+            // Avoid leaking the downstream client's UA to the upstream subscription source,
+            // which can trigger client-specific payloads (for example Loon-formatted configs).
+            upstream_request_headers.erase("User-Agent");
+            request_headers = &upstream_request_headers;
+        }
         strSub = webGet(link, proxy, global.cacheSubscription, &extra_headers, request_headers);
         /*
         if(strSub.size() == 0)
