@@ -2448,6 +2448,7 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                 if (!scv.is_undef()) {
                     proxy += ",skip-cert-verify=" + std::string(scv.get() ? "true" : "false");
                 }
+                proxy += ",udp=" + std::string(udp.get() ? "true" : "false");
                 break;
             default:
                 continue;
