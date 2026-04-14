@@ -2650,19 +2650,16 @@ proxyToSingBox(std::vector<Proxy> &nodes, rapidjson::Document &json,
                const ProxyGroupConfigs &extra_proxy_group, extra_settings &ext) {
     using namespace rapidjson_ext;
     rapidjson::Document::AllocatorType &allocator = json.GetAllocator();
-    rapidjson::Value outbounds(rapidjson::kArrayType), route(rapidjson::kArrayType);
+    rapidjson::Value outbounds(rapidjson::kArrayType);
     std::vector<Proxy> nodelist;
     string_array remarks_list;
     std::string search = " Mbps";
 
     if (!ext.nodelist) {
         auto direct = buildObject(allocator, "type", "direct", "tag", "DIRECT");
+        auto reject = buildObject(allocator, "type", "block", "tag", "REJECT");
         outbounds.PushBack(direct, allocator);
-        // 注释掉 REJECT 和 dns-out
-        // auto reject = buildObject(allocator, "type", "block", "tag", "REJECT");
-        // outbounds.PushBack(reject, allocator);
-        // auto dns = buildObject(allocator, "type", "dns", "tag", "dns-out");
-        // outbounds.PushBack(dns, allocator);
+        outbounds.PushBack(reject, allocator);
     }
 
     for (Proxy &x: nodes) {

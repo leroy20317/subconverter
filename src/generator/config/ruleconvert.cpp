@@ -1,9 +1,11 @@
+#include <set>
 #include <string>
 
 #include "handler/settings.h"
 #include "utils/logger.h"
 #include "utils/network.h"
 #include "utils/regexp.h"
+#include "utils/string_hash.h"
 #include "utils/string.h"
 #include "utils/rapidjson_extra.h"
 #include "subexport.h"
@@ -490,82 +492,234 @@ void rulesetToSurge(INIReader &base_rule, std::vector<RulesetContent> &ruleset_c
     }
 }
 
-static rapidjson::Value transformRuleToSingBox(std::vector<std::string_view> &args, const std::string& rule, const std::string &group, rapidjson::MemoryPoolAllocator<>& allocator)
+enum class SingBoxRuleParseResult
 {
-    args.clear();
-    split(args, rule, ',');
-    if (args.size() < 2) return rapidjson::Value(rapidjson::kObjectType);
-    auto type = toLower(std::string(args[0]));
-    auto value = toLower(std::string(args[1]));
-//    std::string_view option;
-//    if (args.size() >= 3) option = args[2];
+    Unsupported,
+    Matcher,
+    RouteRule,
+    Final
+};
 
-    rapidjson::Value rule_obj(rapidjson::kObjectType);
-    type = replaceAllDistinct(type, "-", "_");
-    type = replaceAllDistinct(type, "ip_cidr6", "ip_cidr");
-    type = replaceAllDistinct(type, "src_", "source_");
-    if (type == "match" || type == "final")
-    {
-        rule_obj.AddMember("outbound", rapidjson::Value(value.data(), value.size(), allocator), allocator);
-    }
-    else
-    {
-        rule_obj.AddMember(rapidjson::Value(type.c_str(), allocator), rapidjson::Value(value.data(), value.size(), allocator), allocator);
-        rule_obj.AddMember("outbound", rapidjson::Value(group.c_str(), allocator), allocator);
-    }
-    return rule_obj;
+static std::string normalizeSingBoxRuleType(const std::string &type)
+{
+    auto normalized = toLower(trimWhitespace(type));
+    normalized = replaceAllDistinct(normalized, "-", "_");
+    normalized = replaceAllDistinct(normalized, "ip_cidr6", "ip_cidr");
+    normalized = replaceAllDistinct(normalized, "src_", "source_");
+    return normalized;
 }
 
-static void appendSingBoxRule(std::vector<std::string_view> &args, rapidjson::Value &rules, const std::string& rule, rapidjson::MemoryPoolAllocator<>& allocator)
+static void addSingBoxStringArrayMember(rapidjson::Value &rule, const char *name, const std::string &value,
+                                        rapidjson::MemoryPoolAllocator<> &allocator)
 {
-    using namespace rapidjson_ext;
+    rapidjson::Value values(rapidjson::kArrayType);
+    values.PushBack(rapidjson::Value(value.c_str(), allocator), allocator);
+    rule.AddMember(rapidjson::Value(name, allocator), values, allocator);
+}
+
+static bool addSingBoxIntArrayMember(rapidjson::Value &rule, const char *name, const std::string &value,
+                                     rapidjson::MemoryPoolAllocator<> &allocator)
+{
+    if (!regMatch(value, R"(^\d+$)"))
+        return false;
+
+    rapidjson::Value values(rapidjson::kArrayType);
+    values.PushBack(to_int(value), allocator);
+    rule.AddMember(rapidjson::Value(name, allocator), values, allocator);
+    return true;
+}
+
+static rapidjson::Value buildSingBoxRoutedRule(rapidjson::Value rule, const std::string &group,
+                                               rapidjson::MemoryPoolAllocator<> &allocator)
+{
+    rule.AddMember("action", "route", allocator);
+    rule.AddMember("outbound", rapidjson::Value(group.c_str(), allocator), allocator);
+    return rule;
+}
+
+static rapidjson::Value buildSingBoxRuleSetReference(const std::string &tag, const std::string &group,
+                                                     rapidjson::MemoryPoolAllocator<> &allocator,
+                                                     bool match_source = false)
+{
+    rapidjson::Value rule(rapidjson::kObjectType);
+    rapidjson::Value rule_sets(rapidjson::kArrayType);
+    rule_sets.PushBack(rapidjson::Value(tag.c_str(), allocator), allocator);
+    rule.AddMember("rule_set", rule_sets, allocator);
+    if (match_source)
+        rule.AddMember("rule_set_ipcidr_match_source", true, allocator);
+    return buildSingBoxRoutedRule(std::move(rule), group, allocator);
+}
+
+static rapidjson::Value buildSingBoxOfficialRuleSet(const std::string &tag, rapidjson::MemoryPoolAllocator<> &allocator)
+{
+    const bool is_geosite = startsWith(tag, "geosite-");
+    const std::string repo = is_geosite ? "sing-geosite" : "sing-geoip";
+    const std::string url = "https://raw.githubusercontent.com/SagerNet/" + repo + "/rule-set/" + tag + ".srs";
+
+    rapidjson::Value rule_set(rapidjson::kObjectType);
+    rule_set.AddMember("type", "remote", allocator);
+    rule_set.AddMember("tag", rapidjson::Value(tag.c_str(), allocator), allocator);
+    rule_set.AddMember("format", "binary", allocator);
+    rule_set.AddMember("url", rapidjson::Value(url.c_str(), allocator), allocator);
+    rule_set.AddMember("download_detour", "DIRECT", allocator);
+    return rule_set;
+}
+
+static std::string makeSingBoxInlineRuleSetTag(const RulesetContent &ruleset, std::size_t index)
+{
+    std::string seed = ruleset.rule_path_typed.empty() ? ruleset.rule_path : ruleset.rule_path_typed;
+    if (seed.empty())
+        seed = ruleset.rule_group + "-" + std::to_string(index);
+    return "subconverter-" + std::to_string(hash_(seed));
+}
+
+static SingBoxRuleParseResult parseSingBoxRule(std::vector<std::string_view> &args, const std::string &rule,
+                                               rapidjson::Value &out_rule, std::string &final_outbound,
+                                               std::string &required_rule_set_tag,
+                                               bool &rule_set_match_source,
+                                               rapidjson::MemoryPoolAllocator<> &allocator)
+{
     args.clear();
     split(args, rule, ',');
-    if (args.size() < 2) return;
-    auto type = args[0];
-//    std::string_view option;
-//    if (args.size() >= 3) option = args[2];
+    if (args.size() < 2)
+        return SingBoxRuleParseResult::Unsupported;
 
-    if (none_of(SingBoxRuleTypes, [&](const std::string& t){ return type == t; }))
-        return;
+    const std::string normalized_type = normalizeSingBoxRuleType(std::string(args[0]));
+    const std::string raw_value = trimWhitespace(std::string(args[1]));
+    const std::string normalized_value = toLower(raw_value);
 
-    auto realType = toLower(std::string(type));
-    auto value = toLower(std::string(args[1]));
-    realType = replaceAllDistinct(realType, "-", "_");
-    realType = replaceAllDistinct(realType, "ip_cidr6", "ip_cidr");
+    out_rule.SetObject();
+    final_outbound.clear();
+    required_rule_set_tag.clear();
+    rule_set_match_source = false;
 
-    rules | AppendToArray(realType.c_str(), rapidjson::Value(value.c_str(), value.size(), allocator), allocator);
+    if (normalized_type == "match" || normalized_type == "final")
+    {
+        final_outbound = raw_value;
+        return SingBoxRuleParseResult::Final;
+    }
+
+    if (normalized_type == "geoip")
+    {
+        if (normalized_value == "private")
+            out_rule.AddMember("ip_is_private", true, allocator);
+        else
+        {
+            required_rule_set_tag = "geoip-" + normalized_value;
+            return SingBoxRuleParseResult::RouteRule;
+        }
+        return SingBoxRuleParseResult::RouteRule;
+    }
+
+    if (normalized_type == "source_geoip")
+    {
+        if (normalized_value == "private")
+            out_rule.AddMember("source_ip_is_private", true, allocator);
+        else
+        {
+            required_rule_set_tag = "geoip-" + normalized_value;
+            rule_set_match_source = true;
+            return SingBoxRuleParseResult::RouteRule;
+        }
+        return SingBoxRuleParseResult::RouteRule;
+    }
+
+    if (normalized_type == "geosite")
+    {
+        required_rule_set_tag = "geosite-" + normalized_value;
+        return SingBoxRuleParseResult::RouteRule;
+    }
+
+    if (normalized_type == "ip_version")
+    {
+        if (!regMatch(raw_value, R"(^\d+$)"))
+            return SingBoxRuleParseResult::Unsupported;
+        out_rule.AddMember("ip_version", to_int(raw_value), allocator);
+        return SingBoxRuleParseResult::Matcher;
+    }
+
+    if (normalized_type == "port")
+    {
+        if (!addSingBoxIntArrayMember(out_rule, "port", raw_value, allocator))
+            return SingBoxRuleParseResult::Unsupported;
+        return SingBoxRuleParseResult::Matcher;
+    }
+
+    if (normalized_type == "source_port")
+    {
+        if (!addSingBoxIntArrayMember(out_rule, "source_port", raw_value, allocator))
+            return SingBoxRuleParseResult::Unsupported;
+        return SingBoxRuleParseResult::Matcher;
+    }
+
+    if (normalized_type == "user_id")
+    {
+        if (!addSingBoxIntArrayMember(out_rule, "user_id", raw_value, allocator))
+            return SingBoxRuleParseResult::Unsupported;
+        return SingBoxRuleParseResult::Matcher;
+    }
+
+    if (normalized_type == "protocol" || normalized_type == "network")
+    {
+        out_rule.AddMember(rapidjson::Value(normalized_type.c_str(), allocator),
+                           rapidjson::Value(raw_value.c_str(), allocator), allocator);
+        return SingBoxRuleParseResult::Matcher;
+    }
+
+    if (normalized_type == "port_range" || normalized_type == "source_port_range" || normalized_type == "domain" ||
+        normalized_type == "domain_suffix" || normalized_type == "domain_keyword" || normalized_type == "domain_regex" ||
+        normalized_type == "ip_cidr" || normalized_type == "source_ip_cidr" || normalized_type == "inbound" ||
+        normalized_type == "process_name" || normalized_type == "process_path" || normalized_type == "package_name" ||
+        normalized_type == "user")
+    {
+        addSingBoxStringArrayMember(out_rule, normalized_type.c_str(), raw_value, allocator);
+        return SingBoxRuleParseResult::Matcher;
+    }
+
+    return SingBoxRuleParseResult::Unsupported;
 }
 
 void rulesetToSingBox(rapidjson::Document &base_rule, std::vector<RulesetContent> &ruleset_content_array, bool overwrite_original_rules)
 {
     using namespace rapidjson_ext;
+    (void)overwrite_original_rules;
     std::string rule_group, retrieved_rules, strLine, final;
     std::stringstream strStrm;
     size_t total_rules = 0;
     auto &allocator = base_rule.GetAllocator();
 
     rapidjson::Value rules(rapidjson::kArrayType);
-    if (!overwrite_original_rules)
+    rapidjson::Value rule_sets(rapidjson::kArrayType);
+    std::set<std::string> existing_rule_set_tags;
+    if (base_rule.HasMember("route") && base_rule["route"].IsObject())
     {
-        if (base_rule.HasMember("route") && base_rule["route"].HasMember("rules") && base_rule["route"]["rules"].IsArray())
+        if (base_rule["route"].HasMember("rules") && base_rule["route"]["rules"].IsArray())
             rules.Swap(base_rule["route"]["rules"]);
+        if (base_rule["route"].HasMember("rule_set") && base_rule["route"]["rule_set"].IsArray())
+        {
+            for (const auto &rule_set : base_rule["route"]["rule_set"].GetArray())
+            {
+                if (rule_set.IsObject() && rule_set.HasMember("tag") && rule_set["tag"].IsString())
+                    existing_rule_set_tags.insert(rule_set["tag"].GetString());
+            }
+            rule_sets.Swap(base_rule["route"]["rule_set"]);
+        }
+        if (base_rule["route"].HasMember("final") && base_rule["route"]["final"].IsString())
+            final = base_rule["route"]["final"].GetString();
     }
 
     if (global.singBoxAddClashModes)
     {
-        auto global_object = buildObject(allocator, "clash_mode", "Global", "outbound", "GLOBAL");
-        auto direct_object = buildObject(allocator, "clash_mode", "Direct", "outbound", "DIRECT");
+        auto global_object = buildObject(allocator, "clash_mode", "Global", "action", "route", "outbound", "GLOBAL");
+        auto direct_object = buildObject(allocator, "clash_mode", "Direct", "action", "route", "outbound", "DIRECT");
         rules.PushBack(global_object, allocator);
         rules.PushBack(direct_object, allocator);
     }
 
-    // auto dns_object = buildObject(allocator, "protocol", "dns", "outbound", "dns-out");
-    // rules.PushBack(dns_object, allocator);
-
     std::vector<std::string_view> temp(4);
-    for(RulesetContent &x : ruleset_content_array)
+    for(std::size_t i = 0; i < ruleset_content_array.size(); i++)
     {
+        RulesetContent &x = ruleset_content_array[i];
         if(global.maxAllowedRules && total_rules > global.maxAllowedRules)
             break;
         rule_group = x.rule_group;
@@ -578,23 +732,45 @@ void rulesetToSingBox(rapidjson::Document &base_rule, std::vector<RulesetContent
         if(startsWith(retrieved_rules, "[]"))
         {
             strLine = retrieved_rules.substr(2);
-            if(startsWith(strLine, "FINAL") || startsWith(strLine, "MATCH"))
+            rapidjson::Value parsed_rule(rapidjson::kObjectType);
+            std::string parsed_final, required_rule_set_tag;
+            bool rule_set_match_source = false;
+            switch(parseSingBoxRule(temp, strLine, parsed_rule, parsed_final, required_rule_set_tag,
+                                    rule_set_match_source, allocator))
             {
+            case SingBoxRuleParseResult::Final:
                 final = rule_group;
-                continue;
+                break;
+            case SingBoxRuleParseResult::RouteRule:
+                if(!required_rule_set_tag.empty())
+                {
+                    if(existing_rule_set_tags.insert(required_rule_set_tag).second)
+                        rule_sets.PushBack(buildSingBoxOfficialRuleSet(required_rule_set_tag, allocator), allocator);
+                    rules.PushBack(buildSingBoxRuleSetReference(required_rule_set_tag, rule_group, allocator, rule_set_match_source), allocator);
+                }
+                else
+                    rules.PushBack(buildSingBoxRoutedRule(std::move(parsed_rule), rule_group, allocator), allocator);
+                total_rules++;
+                break;
+            case SingBoxRuleParseResult::Matcher:
+                rules.PushBack(buildSingBoxRoutedRule(std::move(parsed_rule), rule_group, allocator), allocator);
+                total_rules++;
+                break;
+            default:
+                break;
             }
-            rules.PushBack(transformRuleToSingBox(temp, strLine, rule_group, allocator), allocator);
-            total_rules++;
             continue;
         }
         retrieved_rules = convertRuleset(retrieved_rules, x.rule_type);
         char delimiter = getLineBreak(retrieved_rules);
 
+        strStrm.str("");
         strStrm.clear();
         strStrm<<retrieved_rules;
 
         std::string::size_type lineSize;
-        rapidjson::Value rule(rapidjson::kObjectType);
+        rapidjson::Value inline_rules(rapidjson::kArrayType);
+        const std::string inline_rule_set_tag = makeSingBoxInlineRuleSetTag(x, i);
 
         while(getline(strStrm, strLine, delimiter))
         {
@@ -609,18 +785,58 @@ void rulesetToSingBox(rapidjson::Document &base_rule, std::vector<RulesetContent
                 strLine.erase(strLine.find("//"));
                 strLine = trimWhitespace(strLine);
             }
-            appendSingBoxRule(temp, rule, strLine, allocator);
+            rapidjson::Value parsed_rule(rapidjson::kObjectType);
+            std::string parsed_final, required_rule_set_tag;
+            bool rule_set_match_source = false;
+            switch(parseSingBoxRule(temp, strLine, parsed_rule, parsed_final, required_rule_set_tag,
+                                    rule_set_match_source, allocator))
+            {
+            case SingBoxRuleParseResult::Final:
+                final = rule_group;
+                break;
+            case SingBoxRuleParseResult::RouteRule:
+                if(!required_rule_set_tag.empty())
+                {
+                    if(existing_rule_set_tags.insert(required_rule_set_tag).second)
+                        rule_sets.PushBack(buildSingBoxOfficialRuleSet(required_rule_set_tag, allocator), allocator);
+                    rules.PushBack(buildSingBoxRuleSetReference(required_rule_set_tag, rule_group, allocator, rule_set_match_source), allocator);
+                }
+                else
+                    rules.PushBack(buildSingBoxRoutedRule(std::move(parsed_rule), rule_group, allocator), allocator);
+                total_rules++;
+                break;
+            case SingBoxRuleParseResult::Matcher:
+                inline_rules.PushBack(parsed_rule, allocator);
+                total_rules++;
+                break;
+            default:
+                break;
+            }
         }
-        if (rule.ObjectEmpty()) continue;
-        rule.AddMember("outbound", rapidjson::Value(rule_group.c_str(), allocator), allocator);
-        rules.PushBack(rule, allocator);
+        if (!inline_rules.Empty())
+        {
+            if (existing_rule_set_tags.insert(inline_rule_set_tag).second)
+            {
+                rapidjson::Value rule_set(rapidjson::kObjectType);
+                rule_set.AddMember("type", "inline", allocator);
+                rule_set.AddMember("tag", rapidjson::Value(inline_rule_set_tag.c_str(), allocator), allocator);
+                rule_set.AddMember("rules", inline_rules, allocator);
+                rule_sets.PushBack(rule_set, allocator);
+            }
+            rules.PushBack(buildSingBoxRuleSetReference(inline_rule_set_tag, rule_group, allocator), allocator);
+        }
     }
 
     if (!base_rule.HasMember("route"))
         base_rule.AddMember("route", rapidjson::Value(rapidjson::kObjectType), allocator);
 
-    auto finalValue = rapidjson::Value(final.c_str(), allocator);
     base_rule["route"]
     | AddMemberOrReplace("rules", rules, allocator)
-    | AddMemberOrReplace("final", finalValue, allocator);
+    | AddMemberOrReplace("rule_set", rule_sets, allocator);
+
+    if (!final.empty())
+    {
+        auto finalValue = rapidjson::Value(final.c_str(), allocator);
+        base_rule["route"] | AddMemberOrReplace("final", finalValue, allocator);
+    }
 }
