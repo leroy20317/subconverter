@@ -46,35 +46,6 @@ bool isNumeric(const std::string &str) {
     return true;
 }
 
-std::string maskValueForLog(const std::string &value) {
-    if (value.empty())
-        return "<empty>";
-    if (value.size() == 1)
-        return "*(len=1)";
-    if (value.size() == 2)
-        return "**(len=2)";
-    return value.substr(0, 1) + "***" + value.substr(value.size() - 1, 1) + "(len=" + std::to_string(value.size()) +
-           ")";
-}
-
-std::string boolToString(bool value) {
-    return value ? "true" : "false";
-}
-
-void writeLoonNodeLog(const Proxy &node, const std::string &hostname, const std::string &port,
-                      const std::string &username, const std::string &password, const std::string &id,
-                      const std::string &method, const std::string &transport, const std::string &proxy,
-                      const tribool &udp) {
-    writeLog(0,
-             "Loon export node: remark='" + node.Remark + "', type=" + getProxyTypeName(node.Type) + ", server=" +
-             hostname + ":" + port + ", username=" + maskValueForLog(username) + ", password=" +
-             maskValueForLog(password) + ", id=" + maskValueForLog(id) + ", method=" +
-             (method.empty() ? "<empty>" : method) + ", transport=" + (transport.empty() ? "<empty>" : transport) +
-             ", tls=" + boolToString(node.TLSSecure) + ", udp=" + boolToString(udp.get()) + ", proxy_len=" +
-             std::to_string(proxy.size()),
-             LOG_LEVEL_VERBOSE);
-}
-
 
 std::string
 vmessLinkConstruct(const std::string &remarks, const std::string &add, const std::string &port, const std::string &type,
@@ -2287,11 +2258,8 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                         proxy += "," +
                                 replaceAllDistinct(replaceAllDistinct(pluginopts, ";obfs-host=", ","), "obfs=",
                                                    "");
-                } else if (!plugin.empty()) {
-                    writeLog(0, "Loon export skipped node '" + x.Remark + "' due to unsupported SS plugin '" + plugin +
-                                "'.", LOG_LEVEL_VERBOSE);
+                } else if (!plugin.empty())
                     continue;
-                }
                 break;
             case ProxyType::VMess:
                 if (method == "auto")
@@ -2318,8 +2286,6 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                             proxy += ",host=" + host;
                         break;
                     default:
-                        writeLog(0, "Loon export skipped node '" + x.Remark + "' due to unsupported VMess transport '" +
-                                    transproto + "'.", LOG_LEVEL_VERBOSE);
                         continue;
                 }
                 proxy += ",alterId=" + aid;
@@ -2352,10 +2318,6 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                                 proxy += ",host=" + host;
                             break;
                         default:
-                            writeLog(0,
-                                     "Loon export skipped node '" + x.Remark +
-                                     "' due to unsupported VLESS transport '" + transproto + "'.",
-                                     LOG_LEVEL_VERBOSE);
                             continue;
                     }
                     proxy += ",over-tls=" + std::string(tlssecure ? "true" : "false");
@@ -2411,8 +2373,6 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                             proxy += ",host=" + host;
                         break;
                     default:
-                        writeLog(0, "Loon export skipped node '" + x.Remark + "' due to unsupported Trojan transport '" +
-                                    transproto + "'.", LOG_LEVEL_VERBOSE);
                         continue;
                 }
                 if (!scv.is_undef())
@@ -2491,8 +2451,6 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                 proxy += ",udp=" + std::string(udp.get() ? "true" : "false");
                 break;
             default:
-                writeLog(0, "Loon export skipped node '" + x.Remark + "' due to unsupported type '" +
-                            getProxyTypeName(x.Type) + "'.", LOG_LEVEL_VERBOSE);
                 continue;
         }
 
@@ -2511,8 +2469,6 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
                 proxy += ",udp=true";
             }
         }
-
-        writeLoonNodeLog(x, hostname, port, username, password, id, method, transproto, proxy, udp);
 
         if (ext.nodelist)
             output_nodelist += x.Remark + " = " + proxy + "\n";
