@@ -90,6 +90,8 @@ Notes:
 2. `mixed` outputs a regular Base64 subscription composed of supported single-node links.
 3. Shadowrocket users should usually use `ss`, `ssr`, `v2ray`, or `mixed`.
 4. Surge output is controlled by `target=surge` and optional `ver=<number>`. The current code path defaults to `ver=3` when `ver` is omitted.
+5. `AnyTLS` export for Surge requires `target=surge&ver=5`.
+6. Quantumult X `AnyTLS` export uses `tls-host` for standard TLS and automatically emits `reality-base64-pubkey` / `reality-hex-shortid` when those fields exist on the node.
 
 ## Basic Usage
 

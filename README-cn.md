@@ -75,6 +75,10 @@
 
 4.  目标类型为 `auto` 时，会根据请求的 `User-Agent` 自动判断输出的目标类型，匹配逻辑实现于 `src/handler/interfaces.cpp` 中。
 
+5.  Surge 的 AnyTLS 导出需使用 `target=surge&ver=5`。
+
+6.  Quantumult X 的 AnyTLS 导出会使用 `tls-host` 表示标准 TLS；当节点带有 `PublicKey` / `ShortId` 时，会自动输出 `reality-base64-pubkey` / `reality-hex-shortid`。
+
 ---
 
 ## 简易用法

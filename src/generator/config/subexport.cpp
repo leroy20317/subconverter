@@ -1115,6 +1115,17 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
                 if (!x.Ports.empty())
                     proxy += ",port-hopping=" + x.Ports;
                 break;
+            case ProxyType::AnyTLS:
+                if (surge_ver < 5)
+                    continue;
+                proxy = "anytls, " + hostname + ", " + port + ", password=" + password;
+                if (!x.SNI.empty())
+                    proxy += ", sni=" + x.SNI;
+                if (!scv.is_undef())
+                    proxy += ", skip-cert-verify=" + scv.get_str();
+                if (!x.Fingerprint.empty())
+                    proxy += ", server-cert-fingerprint-sha256=" + x.Fingerprint;
+                break;
             case ProxyType::WireGuard:
                 if (surge_ver < 4 && surge_ver != -3)
                     continue;
@@ -1143,7 +1154,7 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
 
         if (!tfo.is_undef())
             proxy += ", tfo=" + tfo.get_str();
-        if (!udp.is_undef())
+        if (!udp.is_undef() && x.Type != ProxyType::AnyTLS)
             proxy += ", udp-relay=" + udp.get_str();
         if (underlying_proxy != "")
             proxy += ", underlying-proxy=" + underlying_proxy;
@@ -1852,6 +1863,15 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
                 } else {
                     proxyStr += ", over-tls=false";
                 }
+                break;
+            case ProxyType::AnyTLS:
+                proxyStr = "anytls = " + hostname + ":" + port + ", password=" + password + ", over-tls=true";
+                if (!x.SNI.empty())
+                    proxyStr += ", tls-host=" + x.SNI;
+                if (!x.PublicKey.empty())
+                    proxyStr += ", reality-base64-pubkey=" + x.PublicKey;
+                if (!x.ShortId.empty())
+                    proxyStr += ", reality-hex-shortid=" + x.ShortId;
                 break;
             case ProxyType::SOCKS5:
                 proxyStr = "socks5 = " + hostname + ":" + port;

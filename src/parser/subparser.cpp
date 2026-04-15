@@ -2015,7 +2015,7 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
     for (auto &x: proxies) {
         std::string remarks, server, port, method, username, password, sni, underlying_proxy; //common
         std::string plugin, pluginopts, pluginopts_mode, pluginopts_host, mod_url, mod_md5; //ss
-        std::string id, net, tls, host, edge, path, fp; //v2
+        std::string id, net, tls, host, edge, path, fp, pbk, sid; //v2
         std::string protocol, protoparam; //ssr
         std::string section, ip, ipv6, private_key, public_key, mtu, test_url, client_id, peer, keepalive; //wireguard
         string_array dns_servers;
@@ -2730,6 +2730,56 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                         trojanConstruct(node, TROJAN_DEFAULT_GROUP, remarks, server, port, password, "", host, "", fp,
                                         sni, std::vector<std::string>{},
                                         tls == "true", udp, tfo, scv, tls13);
+                        break;
+                    case "anytls"_hash: //quantumult x style anytls link
+                        server = trim(configs[0].substr(0, configs[0].rfind(':')));
+                        port = trim(configs[0].substr(configs[0].rfind(':') + 1));
+                        if (port == "0")
+                            continue;
+
+                        for (i = 1; i < configs.size(); i++) {
+                            vArray = split(trim(configs[i]), "=");
+                            if (vArray.size() != 2)
+                                continue;
+                            itemName = trim(vArray[0]);
+                            itemVal = trim(vArray[1]);
+                            switch (hash_(itemName)) {
+                                case "password"_hash:
+                                    password = itemVal;
+                                    break;
+                                case "tag"_hash:
+                                    remarks = itemVal;
+                                    break;
+                                case "tls-host"_hash:
+                                    sni = itemVal;
+                                    break;
+                                case "udp-relay"_hash:
+                                    udp = itemVal;
+                                    break;
+                                case "fast-open"_hash:
+                                    tfo = itemVal;
+                                    break;
+                                case "tls-verification"_hash:
+                                    scv = itemVal == "false";
+                                    break;
+                                case "reality-base64-pubkey"_hash:
+                                    pbk = itemVal;
+                                    break;
+                                case "reality-hex-shortid"_hash:
+                                    sid = itemVal;
+                                    break;
+                                default:
+                                    continue;
+                            }
+                        }
+                        if (remarks.empty())
+                            remarks = server + ":" + port;
+
+                        anyTlSConstruct(node, ANYTLS_DEFAULT_GROUP, remarks, port, password, server,
+                                        std::vector<std::string>{}, "", sni, udp, tfo, scv, tribool(), "",
+                                        30, 30, 1, 1);
+                        node.PublicKey = pbk;
+                        node.ShortId = sid;
                         break;
                     case "http"_hash: //quantumult x style http links
                         server = trim(configs[0].substr(0, configs[0].rfind(':')));
