@@ -8,6 +8,11 @@
 # 后台运行容器，并将容器内 25500 端口映射到宿主机 25500
 docker run -d --restart=always -p 25500:25500 ghcr.io/leroy20317/subconverter:latest
 
+# 如需显式指定容器本地时区，可在运行时通过 TZ 传入
+docker run -d --restart=always -p 25500:25500 \
+  -e TZ=Asia/Shanghai \
+  ghcr.io/leroy20317/subconverter:latest
+
 # 检查服务是否正常启动
 curl http://localhost:25500/version
 
@@ -26,7 +31,16 @@ services:
     ports:
       - "15051:25500"
     restart: always
+    environment:
+      - TZ=Asia/Shanghai
 ```
+
+## 时区说明
+
+- 当前镜像不会再内置固定时区，程序输出使用容器运行时的本地时区。
+- 如需指定时区，优先通过 `TZ` 环境变量传入，例如 `TZ=Asia/Shanghai`。
+- 镜像内已包含 `tzdata`，常见 IANA 时区名称可以在运行时直接解析。
+- 如果你的运行环境统一通过宿主机时区文件管理，也可以额外挂载 `/etc/localtime:/etc/localtime:ro` 与 `/etc/timezone:/etc/timezone:ro`。
 
 ## 容器内更新 `pref` 配置
 

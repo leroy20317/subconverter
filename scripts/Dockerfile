@@ -54,14 +54,10 @@ RUN set -xe && \
 FROM alpine:3.16
 LABEL maintainer="dev@leroytop.com"
 
-RUN apk add --no-cache --virtual subconverter-deps pcre2 libcurl yaml-cpp
+RUN apk add --no-cache --virtual subconverter-deps pcre2 libcurl yaml-cpp tzdata
 
 COPY --from=builder /subconverter/subconverter /usr/bin/
 COPY --from=builder /subconverter/base /base/
-
-ENV TZ=Africa/Abidjan
-RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
-RUN echo $TZ > /etc/timezone
 
 # set entry
 WORKDIR /base
