@@ -1,0 +1,23 @@
+name: Cleanup Actions Cache
+
+on:
+  schedule:
+    - cron: "17 3 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Delete all Actions caches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh cache delete --all --succeed-on-no-caches

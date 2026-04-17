@@ -96,10 +96,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: true
           cache-from: |
-            type=gha,scope=subconverter-${{ matrix.arch }}
             type=registry,ref=${{ env.IMAGE_NAME }}:buildcache-${{ matrix.arch }}
           cache-to: |
-            type=gha,scope=subconverter-${{ matrix.arch }},mode=max
             type=registry,ref=${{ env.IMAGE_NAME }}:buildcache-${{ matrix.arch }},mode=max
           build-args: |
             SHA=${{ needs.prepare.outputs.sha_short }}
