@@ -106,21 +106,28 @@ static std::string transformRuleToCommon(string_view_array &temp, const std::str
     split(temp, input, ',');
     if(temp.size() < 2)
     {
-        strLine = temp[0];
+        strLine = trimWhitespace(std::string(temp[0]), true, true);
         strLine += ",";
         strLine += group;
     }
     else
     {
-        strLine = temp[0];
+        const std::string rule_type = trimWhitespace(std::string(temp[0]), true, true);
+        const std::string rule_value = trimWhitespace(std::string(temp[1]), true, true);
+
+        strLine = rule_type;
         strLine += ",";
-        strLine += temp[1];
+        strLine += rule_value;
         strLine += ",";
         strLine += group;
-        if(temp.size() > 2 && (!no_resolve_only || temp[2] == "no-resolve"))
+        if(temp.size() > 2)
         {
-            strLine += ",";
-            strLine += temp[2];
+            const std::string rule_option = trimWhitespace(std::string(temp[2]), true, true);
+            if(!rule_option.empty() && (!no_resolve_only || rule_option == "no-resolve"))
+            {
+                strLine += ",";
+                strLine += rule_option;
+            }
         }
     }
     return strLine;
