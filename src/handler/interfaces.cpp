@@ -185,6 +185,9 @@ std::string getRuleset(RESPONSE_CALLBACK_ARGS) {
         pose -= posb;
         return 0;
     };
+    auto extractRuleValue = [&]() {
+        return trimWhitespace(strLine.substr(posb, pose), true, true);
+    };
 
     lineSize = output_content.size();
     output_content.clear();
@@ -217,7 +220,7 @@ std::string getRuleset(RESPONSE_CALLBACK_ARGS) {
                 output_content += "  - '";
                 if (strLine[posb - 2] == 'X')
                     output_content += "+.";
-                output_content += strLine.substr(posb, pose);
+                output_content += extractRuleValue();
                 output_content += "'\n";
                 continue;
             case 4:
@@ -226,7 +229,7 @@ std::string getRuleset(RESPONSE_CALLBACK_ARGS) {
                 if (filterLine())
                     continue;
                 output_content += "  - '";
-                output_content += strLine.substr(posb, pose);
+                output_content += extractRuleValue();
                 output_content += "'\n";
                 continue;
             case 5:
@@ -236,7 +239,7 @@ std::string getRuleset(RESPONSE_CALLBACK_ARGS) {
                     continue;
                 if (strLine[posb - 2] == 'X')
                     output_content += '.';
-                output_content += strLine.substr(posb, pose);
+                output_content += extractRuleValue();
                 output_content += '\n';
                 continue;
             case 6:
