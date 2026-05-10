@@ -11,3 +11,5 @@ src/.DS_Store
 build
 
 *.log
+
+server/

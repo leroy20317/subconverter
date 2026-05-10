@@ -104,8 +104,23 @@ http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&config=%CONFIG%
 Parameters:
 
 - `target`: required. Output format.
-- `url`: required unless `default_url` is configured. URL-encoded subscription URL or node link. Multiple entries can be joined with `|` before encoding.
+- `url`: required unless `default_url` is configured. URL-encoded subscription URL or node link. Multiple entries can be joined with `|` before encoding. `tag:name,link` marks all nodes from one source with a tag that can be matched in group rules; untagged nodes no longer emit an empty `group` field on export.
 - `config`: optional. External config path or URL.
+
+Tag-aware group rules supported by the current code:
+
+- `!!UNTAGGED`: match only nodes without a `tag:` prefix.
+- `%TAG%`: auto-expand one group per discovered tag.
+- `!!TAG`: inside a `%TAG%` template group, match nodes of the current tag.
+- `!!IN=ParentA,ParentB`: inside a `%TAG%` template group, attach each generated tag group to one or more parent groups.
+
+Example:
+
+```ini
+custom_proxy_group=Default`select`!!UNTAGGED
+custom_proxy_group=🌍 Media`select`[]Default`[]♻️ Auto`[]🎯 DIRECT
+custom_proxy_group=%TAG%`select`!!TAG`!!IN=🌍 Media
+```
 
 Example:
 
