@@ -69,6 +69,7 @@ struct Proxy {
     uint32_t Id = 0;
     uint32_t GroupId = 0;
     String Group;
+    String Tag;
     String Remark;
     String Hostname;
     uint16_t Port = 0;

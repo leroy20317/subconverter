@@ -98,6 +98,7 @@ namespace qjs
             JS_DefinePropertyValueStr(ctx, obj, "Id", JS_NewUint32(ctx, n.Id), JS_PROP_C_W_E);
             JS_DefinePropertyValueStr(ctx, obj, "GroupId", JS_NewUint32(ctx, n.GroupId), JS_PROP_C_W_E);
             JS_DefinePropertyValueStr(ctx, obj, "Group", JS_NewString(ctx, n.Group), JS_PROP_C_W_E);
+            JS_DefinePropertyValueStr(ctx, obj, "Tag", JS_NewString(ctx, n.Tag), JS_PROP_C_W_E);
             JS_DefinePropertyValueStr(ctx, obj, "Remark", JS_NewString(ctx, n.Remark), JS_PROP_C_W_E);
             JS_DefinePropertyValueStr(ctx, obj, "Server", JS_NewString(ctx, n.Hostname), JS_PROP_C_W_E);
             JS_DefinePropertyValueStr(ctx, obj, "Port", JS_NewInt32(ctx, n.Port), JS_PROP_C_W_E);
@@ -154,6 +155,7 @@ namespace qjs
             node.Id = unwrap_free<int32_t>(ctx, v, "Id");
             node.GroupId = unwrap_free<int32_t>(ctx, v, "GroupId");
             node.Group = unwrap_free<std::string>(ctx, v, "Group");
+            node.Tag = unwrap_free<std::string>(ctx, v, "Tag");
             node.Remark = unwrap_free<std::string>(ctx, v, "Remark");
             node.Hostname = unwrap_free<std::string>(ctx, v, "Server");
             node.Port = unwrap_free<uint32_t>(ctx, v, "Port");

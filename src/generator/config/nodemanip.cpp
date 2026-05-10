@@ -188,7 +188,7 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
             {
                 x.GroupId = groupID;
                 if(custom_group.size())
-                    x.Group = custom_group;
+                    x.Tag = custom_group;
             }
             copyNodes(nodes, allNodes);
         }
@@ -220,7 +220,7 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
         {
             x.GroupId = groupID;
             if(!custom_group.empty())
-                x.Group = custom_group;
+                x.Tag = custom_group;
         }
         copyNodes(nodes, allNodes);
         break;
@@ -233,7 +233,7 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
         }
         node.GroupId = groupID;
         if(!custom_group.empty())
-            node.Group = custom_group;
+            node.Tag = custom_group;
         allNodes.emplace_back(std::move(node));
     }
     return 0;
