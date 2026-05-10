@@ -137,7 +137,16 @@ ProxyGroupConfigs buildProxyGroups(const ProxyGroupConfigs &source_groups, const
             continue;
 
         std::string child_ref = "[]" + child_name;
-        if (std::find(parent->Proxies.begin(), parent->Proxies.end(), child_ref) == parent->Proxies.end())
+        if (std::find(parent->Proxies.begin(), parent->Proxies.end(), child_ref) != parent->Proxies.end())
+            continue;
+
+        auto untagged_pos = std::find_if(parent->Proxies.begin(), parent->Proxies.end(), [](const std::string &rule) {
+            return rule == "!!UNTAGGED" || startsWith(rule, "!!UNTAGGED!!");
+        });
+
+        if (untagged_pos != parent->Proxies.end())
+            parent->Proxies.insert(untagged_pos, child_ref);
+        else
             parent->Proxies.emplace_back(std::move(child_ref));
     }
 
@@ -159,7 +168,8 @@ bool isNumeric(const std::string &str) {
         }
     }
     return true;
-}std::string
+}
+std::string
 vmessLinkConstruct(const std::string &remarks, const std::string &add, const std::string &port, const std::string &type,
                    const std::string &id, const std::string &aid, const std::string &net, const std::string &path,
                    const std::string &host, const std::string &tls) {
@@ -3254,4 +3264,3 @@ std::string proxyToSingBox(std::vector<Proxy> &nodes, const std::string &base_co
 
     return json | SerializeObject();
 }
-
