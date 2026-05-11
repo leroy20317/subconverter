@@ -11,6 +11,7 @@
 #include "parser/config/proxy.h"
 #include "script/script_quickjs.h"
 #include "utils/bitwise.h"
+
 #include "utils/file_extra.h"
 #include "utils/ini_reader/ini_reader.h"
 #include "utils/logger.h"
@@ -2638,7 +2639,9 @@ proxyToLoon(std::vector<Proxy> &nodes, const std::string &base_conf,
     ini.get_items(original_groups);
     ini.erase_section();
 
-    for (const ProxyGroupConfig &x: extra_proxy_group) {
+    ProxyGroupConfigs effective_proxy_group = buildProxyGroups(extra_proxy_group, nodelist);
+
+    for (const ProxyGroupConfig &x: effective_proxy_group) {
         string_array filtered_nodelist;
         std::string group, group_extra;
 
