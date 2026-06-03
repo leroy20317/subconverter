@@ -46,6 +46,7 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
     std::vector<Proxy> nodes;
     Proxy node;
     std::string strSub, extra_headers, custom_group;
+    bool skip_sub_info = false;
     string_icase_map upstream_request_headers;
 
     // TODO: replace with startsWith if appropriate
@@ -114,6 +115,7 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
         {
             custom_group = link.substr(4, pos - 4);
             link.erase(0, pos + 1);
+            skip_sub_info = true;
         }
     }
 
@@ -174,11 +176,11 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
                 writeLog(LOG_TYPE_ERROR, "Invalid subscription: '" + link + "'!");
                 return -1;
             }
-            if(startsWith(strSub, "ssd://"))
+            if(!skip_sub_info && startsWith(strSub, "ssd://"))
             {
                 getSubInfoFromSSD(strSub, subInfo);
             }
-            else
+            else if(!skip_sub_info)
             {
                 if(!getSubInfoFromHeader(extra_headers, subInfo))
                     getSubInfoFromNodes(nodes, stream_rules, time_rules, subInfo);
@@ -207,11 +209,11 @@ int addNodes(std::string link, std::vector<Proxy> &allNodes, int groupID, parse_
             writeLog(LOG_TYPE_ERROR, "Invalid configuration file!");
             return -1;
         }
-        if(startsWith(strSub, "ssd://"))
+        if(!skip_sub_info && startsWith(strSub, "ssd://"))
         {
             getSubInfoFromSSD(strSub, subInfo);
         }
-        else
+        else if(!skip_sub_info)
         {
             getSubInfoFromNodes(nodes, stream_rules, time_rules, subInfo);
         }
