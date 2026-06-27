@@ -58,7 +58,6 @@ struct UAProfile {
 
 const std::vector<UAProfile> UAMatchList = {
     {"ClashForAndroid", "\\/([0-9.]+)", "2.0", "clash", true},
-    {"ClashForAndroid", "\\/([0-9.]+)R", "", "clashr", false},
     {"ClashForAndroid", "", "", "clash", false},
     {"ClashforWindows", "\\/([0-9.]+)", "0.11", "clash", true},
     {"ClashforWindows", "", "", "clash", false},
@@ -306,7 +305,6 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
             lSimpleSubscription = true;
             break;
         case "clash"_hash:
-        case "clashr"_hash:
         case "surge"_hash:
         case "quan"_hash:
         case "quanx"_hash:
@@ -683,13 +681,12 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
     proxy = parseProxy(global.proxyConfig);
     switch (hash_(argTarget)) {
         case "clash"_hash:
-        case "clashr"_hash:
-            writeLog(0, argTarget == "clashr" ? "Generate target: ClashR" : "Generate target: Clash", LOG_LEVEL_INFO);
+            writeLog(0, "Generate target: Clash", LOG_LEVEL_INFO);
             tpl_args.local_vars["clash.new_field_name"] = ext.clash_new_field_name ? "true" : "false";
             response.headers["profile-update-interval"] = std::to_string(interval / 3600);
             if (ext.nodelist) {
                 YAML::Node yamlnode;
-                proxyToClash(nodes, yamlnode, dummy_group, argTarget == "clashr", ext);
+                proxyToClash(nodes, yamlnode, dummy_group, ext);
                 output_content = YAML::Dump(yamlnode);
             } else {
                 if (render_template(fetchFile(lClashBase, proxy, global.cacheConfig), tpl_args, base_content,
@@ -697,8 +694,7 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
                     *status_code = 400;
                     return base_content;
                 }
-                output_content = proxyToClash(nodes, base_content, lRulesetContent, lCustomProxyGroups,
-                                              argTarget == "clashr", ext);
+                output_content = proxyToClash(nodes, base_content, lRulesetContent, lCustomProxyGroups, ext);
             }
 
             if (argUpload)
@@ -895,24 +891,6 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
     return output_content;
 }
 
-std::string simpleToClashR(RESPONSE_CALLBACK_ARGS) {
-    auto argument = joinArguments(request.argument);
-    int *status_code = &response.status_code;
-
-    std::string url = argument.size() <= 8 ? "" : argument.substr(8);
-    if (url.empty() || argument.substr(0, 8) != "sublink=") {
-        *status_code = 400;
-        return "Invalid request!";
-    }
-    if (url == "sublink") {
-        *status_code = 400;
-        return "Please insert your subscription link instead of clicking the default link.";
-    }
-    request.argument.emplace("target", "clashr");
-    request.argument.emplace("url", urlEncode(url));
-    return subconverter(request, response);
-}
-
 std::string surgeConfToClash(RESPONSE_CALLBACK_ARGS) {
     auto argument = joinArguments(request.argument);
     int *status_code = &response.status_code;
@@ -1045,7 +1023,7 @@ std::string surgeConfToClash(RESPONSE_CALLBACK_ARGS) {
     ext.clash_proxies_style = global.clashProxiesStyle;
 
     ProxyGroupConfigs dummy_groups;
-    proxyToClash(nodes, clash, dummy_groups, false, ext);
+    proxyToClash(nodes, clash, dummy_groups, ext);
 
     section.clear();
     ini.get_items("Proxy", section);

@@ -26,6 +26,7 @@
     - [进阶链接](#进阶链接)
       - [调用地址 (进阶)](#调用地址-进阶)
       - [调用说明 (进阶)](#调用说明-进阶)
+      - [Clash/mihomo 规则集托管](#clashmihomo-规则集托管)
     - [配置档案](#配置档案)
       - [调用地址 (档案)](#调用地址-档案)
       - [调用说明 (档案)](#调用说明-档案)
@@ -46,7 +47,6 @@
 | 类型                         | 作为源类型 | 作为目标类型 | 参数                |
 | ---------------------------- | :--------: | :----------: | ------------------- |
 | Clash                        |     ✓      |      ✓       | clash               |
-| ClashR                       |     ✓      |      ✓       | clashr              |
 | Quantumult (完整配置)        |     ✓      |      ✓       | quan                |
 | Quantumult X (完整配置)      |     ✓      |      ✓       | quanx               |
 | Loon                         |     ✓      |      ✓       | loon                |
@@ -86,21 +86,15 @@
 ### 调用地址
 
 ```txt
-
 http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&config=%CONFIG%
-
 ```
 
 ### 调用说明
 
 | 调用参数 | 必要性 | 示例 | 解释 |
-
-| -------- | :----: | :------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-
+| -------- | :----: | :--: | ---- |
 | target | 必要 | surge | 指想要生成的配置类型，详见上方 [支持类型](#支持类型) 中的参数 |
-
 | url | 必要 | https%3A%2F%2Fwww.xxx.com | 指机场所提供的订阅链接或代理节点的分享链接，需要经过 [URLEncode](https://www.urlencoder.org/) 处理 |
-
 | config | 可选 | https%3A%2F%2Fwww.xxx.com | 指 外部配置 的地址 (包含分组和规则部分)，需要经过 [URLEncode](https://www.urlencoder.org/) 处理，详见 [外部配置](#外部配置) ，当此参数不存在时使用 程序的主程序目录中的配置文件 |
 
 运行 subconverter 主程序后，按照 [调用说明](#调用说明) 的对应内容替换即可得到一份使用**默认设置**的订阅。
@@ -114,27 +108,19 @@ http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&config=%CONFIG%
 如果你需要将一份 Surge 订阅转换成 Clash 的订阅, 可以按以下操作：
 
 ```txt
-
 有以下一个订阅，且想转换成 Clash 的订阅:
 
 1. https://dler.cloud/subscribe/ABCDE?surge=ss
-
-
 
 首先将订阅通过 URLEncode 后可以得到:
 
 https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fsurge%3Dss
 
-
-
 然后将想要的 %TARGET% (即 Clash) 和上一步所得到的 %URL% 填入调用地址中:
 
 http://127.0.0.1:25500/sub?target=clash&url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fsurge%3Dss
 
-
-
 最后将该链接填写至 Clash 的订阅处就大功告成了。
-
 ```
 
 </details>
@@ -146,35 +132,25 @@ http://127.0.0.1:25500/sub?target=clash&url=https%3A%2F%2Fdler.cloud%2Fsubscribe
 如果你需要将多个订阅合成一份, 则要在上方所提及的 URLEncode 之前使用 '|' 来分隔链接, 可以按以下操作：
 
 ```txt
-
 有以下两个订阅，且想合并转换成 Clash 的订阅:
 
 1. https://dler.cloud/subscribe/ABCDE?clash=vmess
 
 2. https://rich.cloud/subscribe/ABCDE?clash=vmess
 
-
-
 首先使用 '|' 将两个订阅分隔开:
 
 https://dler.cloud/subscribe/ABCDE?clash=vmess|https://rich.cloud/subscribe/ABCDE?clash=vmess
-
-
 
 接着通过 URLEncode 后可以得到:
 
 https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess%7Chttps%3A%2F%2Frich.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
 
-
-
 然后将想要的 %TARGET% (即 Clash) 和上一步所得到的 %URL% 填入调用地址中:
 
 http://127.0.0.1:25500/sub?target=clash&url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess%7Chttps%3A%2F%2Frich.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
 
-
-
 最后将该链接填写至 Clash 的订阅处就大功告成了。
-
 ```
 
 </details>
@@ -186,27 +162,19 @@ http://127.0.0.1:25500/sub?target=clash&url=https%3A%2F%2Fdler.cloud%2Fsubscribe
 如果你需要将自建的一条 SS 的 SIP002 链接转换成 Clash 的订阅, 可以按以下操作：
 
 ```txt
-
 有以下自建的一条 SS 的 SIP002 链接，且想转换成 Clash 的订阅:
 
 1. ss://YWVzLTEyOC1nY206dGVzdA==@192.168.100.1:8888#Example1
-
-
 
 首先将订阅通过 URLEncode 后可以得到:
 
 ss%3A%2F%2FYWVzLTEyOC1nY206dGVzdA%3D%3D%40192%2E168%2E100%2E1%3A8888%23Example1
 
-
-
 然后将想要的 %TARGET% (即 Clash) 和上一步所得到的 %URL% 填入调用地址中:
 
 http://127.0.0.1:25500/sub?target=clash&url=ss%3A%2F%2FYWVzLTEyOC1nY206dGVzdA%3D%3D%40192%2E168%2E100%2E1%3A8888%23Example1
 
-
-
 最后将该链接填写至 Clash 的订阅处就大功告成了。
-
 ```
 
 </details>
@@ -218,35 +186,25 @@ http://127.0.0.1:25500/sub?target=clash&url=ss%3A%2F%2FYWVzLTEyOC1nY206dGVzdA%3D
 如果你需要将多个链接合成一份, 则要在上方所提及的 URLEncode 之前使用 '|' 来分隔链接, 可以按以下操作：
 
 ```txt
-
 有以下两个链接，且想合并转换成 Clash 的订阅:
 
 1. ss://YWVzLTEyOC1nY206dGVzdA==@192.168.100.1:8888#Example1
 
 2. vmess://eyJ2IjoiMiIsInBzIjoidm1lc3MtcHJveHkxIiwiYWRkIjoiZXhhbXBsZS5jb20iLCJwb3J0Ijo0NDMsInR5cGUiOiIiLCJpZCI6IjEyMzQ1Njc4LWFiY2QtMTIzNC0xMjM0LTQ3ZmZjYTBjZTIyOSIsImFpZCI6NDQzLCJuZXQiOiJ3cyIsInBhdGgiOiIvdjIiLCJob3N0IjoiZXhhbXBsZS5jb20iLCJ0bHMiOiJ0bHMifQ==
 
-
-
 首先使用 '|' 将两个链接分隔开:
 
 ss://YWVzLTEyOC1nY206dGVzdA==@192.168.100.1:8888#Example1|vmess://eyJ2IjoiMiIsInBzIjoidm1lc3MtcHJveHkxIiwiYWRkIjoiZXhhbXBsZS5jb20iLCJwb3J0Ijo0NDMsInR5cGUiOiIiLCJpZCI6IjEyMzQ1Njc4LWFiY2QtMTIzNC0xMjM0LTQ3ZmZjYTBjZTIyOSIsImFpZCI6NDQzLCJuZXQiOiJ3cyIsInBhdGgiOiIvdjIiLCJob3N0IjoiZXhhbXBsZS5jb20iLCJ0bHMiOiJ0bHMifQ==
-
-
 
 接着通过 URLEncode 后可以得到:
 
 ss%3A%2F%2FYWVzLTEyOC1nY206dGVzdA%3D%3D%40192%2E168%2E100%2E1%3A8888%23Example1%7Cvmess%3A%2F%2FeyJ2IjoiMiIsInBzIjoidm1lc3MtcHJveHkxIiwiYWRkIjoiZXhhbXBsZS5jb20iLCJwb3J0Ijo0NDMsInR5cGUiOiIiLCJpZCI6IjEyMzQ1Njc4LWFiY2QtMTIzNC0xMjM0LTQ3ZmZjYTBjZTIyOSIsImFpZCI6NDQzLCJuZXQiOiJ3cyIsInBhdGgiOiIvdjIiLCJob3N0IjoiZXhhbXBsZS5jb20iLCJ0bHMiOiJ0bHMifQ%3D%3D
 
-
-
 然后将想要的 %TARGET% (即 Clash) 和上一步所得到的 %URL% 填入调用地址中:
 
 http://127.0.0.1:25500/sub?target=clash&url=ss%3A%2F%2FYWVzLTEyOC1nY206dGVzdA%3D%3D%40192%2E168%2E100%2E1%3A8888%23Example1%7Cvmess%3A%2F%2FeyJ2IjoiMiIsInBzIjoidm1lc3MtcHJveHkxIiwiYWRkIjoiZXhhbXBsZS5jb20iLCJwb3J0Ijo0NDMsInR5cGUiOiIiLCJpZCI6IjEyMzQ1Njc4LWFiY2QtMTIzNC0xMjM0LTQ3ZmZjYTBjZTIyOSIsImFpZCI6NDQzLCJuZXQiOiJ3cyIsInBhdGgiOiIvdjIiLCJob3N0IjoiZXhhbXBsZS5jb20iLCJ0bHMiOiJ0bHMifQ%3D%3D
 
-
-
 最后将该链接填写至 Clash 的订阅处就大功告成了。
-
 ```
 
 </details>
@@ -256,9 +214,7 @@ http://127.0.0.1:25500/sub?target=clash&url=ss%3A%2F%2FYWVzLTEyOC1nY206dGVzdA%3D
 当机场提供的 Surge 配置足以满足需求，但额外需要使用 Clash 订阅时，此时可以使用以下方式进行转换
 
 ```txt
-
 http://127.0.0.1:25500/surge2clash?link=Surge的订阅链接
-
 ```
 
 此处 `Surge的订阅链接`**不需要进行URLEncode**，且**无需任何额外配置**。
@@ -296,79 +252,44 @@ http://127.0.0.1:25500/surge2clash?link=Surge的订阅链接
 #### 调用地址 (进阶)
 
 ```txt
-
 http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&emoji=%EMOJI%····
-
 ```
 
 #### 调用说明 (进阶)
 
 | 调用参数 | 必要性 | 示例 | 解释 |
-
-| ------------- | :----: | :--------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-
+| -------- | :----: | :--: | ---- |
 | target | 必要 | surge | 指想要生成的配置类型，详见上方 [支持类型](#支持类型) 中的参数 |
-
 | url | 可选 | https%3A%2F%2Fwww.xxx.com | 指机场所提供的订阅链接或代理节点的分享链接，需要经过 [URLEncode](https://www.urlencoder.org/) 处理，**可选的前提是在 `default_url` 中进行指定**。也可以使用 data URI。可使用 `tag:xxx,https%3A%2F%2Fwww.xxx.com` 为该订阅写入独立 Tag 字段，用于配置文件中的`!!TAG`、`%TAG%`、`!!UNTAGGED` 等匹配；原有 `!!GROUP=XXX` 仍匹配源订阅自带的 Group 字段，未设置 tag 时不会再导出空的 group 字段 |
-
 | group | 可选 | MySS | 用于设置该订阅的组名，多用于 SSD/SSR |
-
 | upload_path | 可选 | MySS.yaml | 用于将生成的订阅文件上传至 `Gist` 后的名称，需要经过 [URLEncode](https://www.urlencoder.org/) 处理 |
-
 | include | 可选 | 详见下文中 `include_remarks` | 指仅保留匹配到的节点，支持正则匹配，需要经过 [URLEncode](https://www.urlencoder.org/) 处理，会覆盖配置文件里的设置 |
-
 | exclude | 可选 | 详见下文中 `exclude_remarks` | 指排除匹配到的节点，支持正则匹配，需要经过 [URLEncode](https://www.urlencoder.org/) 处理，会覆盖配置文件里的设置 |
-
 | config | 可选 | https%3A%2F%2Fwww.xxx.com | 指 外部配置 的地址 (包含分组和规则部分)，需要经过 [URLEncode](https://www.urlencoder.org/) 处理，详见 [外部配置](#外部配置) ，当此参数不存在时使用 主程序目录中的配置文件 |
-
 | dev_id | 可选 | 92DSAFA | 用于设置 QuantumultX 的远程设备 ID, 以在某些版本上开启远程脚本 |
-
 | filename | 可选 | MySS | 指定所生成订阅的文件名，可以在 Clash For Windows 等支持文件名的软件中显示出来 |
-
 | interval | 可选 | 43200 | 用于设置托管配置更新间隔，确定配置将更新多长时间，单位为秒 |
-
 | rename | 可选 | 详见下文中 `rename` | 用于自定义重命名，需要经过 [URLEncode](https://www.urlencoder.org/) 处理，会覆盖配置文件里的设置 |
-
 | filter_script | 可选 | 详见下文中 `filter_script` | 用于自定义筛选节点的js代码，需要经过 [URLEncode](https://www.urlencoder.org/) 处理，会覆盖配置文件里的设置。出于安全考虑，链接需包含正确的 `token` 参数，才会应用该设置 |
-
 | strict | 可选 | true / false | 如果设置为 true，则 Surge 将在上述间隔后要求强制更新 |
-
 | upload | 可选 | true / false | 用于将生成的订阅文件上传至 `Gist`，需要填写`gistconf.ini`，默认为 false (即不上传) ,详见 [自动上传](#自动上传) |
-
 | emoji | 可选 | true / false | 用于设置节点名称是否包含 Emoji，默认为 true |
-
 | add_emoji | 可选 | true / false | 用于在节点名称前加入 Emoji，默认为 true |
-
 | remove_emoji | 可选 | true / false | 用于设置是否删除节点名称中原有的 Emoji，默认为 true |
-
 | append_type | 可选 | true / false | 用于在节点名称前插入节点类型，如 `[SS]`,`[SSR]`等 |
-
 | tfo | 可选 | true / false | 用于开启该订阅链接的 TCP Fast Open，默认为 false |
-
 | udp | 可选 | true / false | 用于开启该订阅链接的 UDP，默认为 false |
-
 | list | 可选 | true / false | 用于输出 Surge Node List 或者 Clash Proxy Provider 或者 Quantumult (X) 的节点订阅 或者 解码后的 SIP002 |
-
 | sort | 可选 | true / false | 用于对输出的节点或策略组按节点名进行再次排序，默认为 false |
-
 | sort_script | 可选 | 详见下文 `sort_script` | 用于自定义排序的js代码，需要经过 [URLEncode](https://www.urlencoder.org/) 处理，会覆盖配置文件里的设置。出于安全考虑，链接需包含正确的 `token` 参数，才会应用该设置 |
-
 | script | 可选 | true / false | 用于生成Clash Script，默认为 false |
-
 | insert | 可选 | true / false | 用于设置是否将配置文件中的 `insert_url` 插入，默认为 true |
-
 | scv | 可选 | true / false | 用于关闭 TLS 节点的证书检查，默认为 false |
-
 | fdn | 可选 | true / false | 用于过滤目标类型不支持的节点，默认为 true |
-
 | expand | 可选 | true / false | 用于在 API 端处理或转换 Surge, QuantumultX, Clash 的规则列表，即是否将规则全文置入订阅中，默认为 false，只有设置为 true 时才会将规则全文写进订阅 |
-
 | append_info | 可选 | true / false | 用于输出包含流量或到期信息的节点, 默认为 true，设置为 false 则取消输出 |
-
 | prepend | 可选 | true / false | 用于设置插入 `insert_url` 时是否插入到所有节点前面，默认为 true |
-
 | tls13 | 可选 | true / false | 用于设置是否为节点增加tls1.3开启参数 |
-
 | new_name | 可选 | true / false | 如果设置为 true，则将启用 Clash 的新组名称 (proxies, proxy-groups, rules) |
 
 #### Clash/mihomo 规则集托管
@@ -401,12 +322,9 @@ payload:
 举个例子：
 
 ```txt
-
 有订阅 `https://dler.cloud/subscribe/ABCDE?clash=vmess`，想转换成 Surge 的订阅，且需要开启 TFO 和 UDP
 
 顺便再给节点名加上 EMOJI 同时排除掉订阅中显示流量和官网的节点（节点名为"剩余流量：1024G"，"官网地址：dler.cloud"）
-
-
 
 首先确认需要用到的参数：
 
@@ -414,24 +332,17 @@ target=surge 、 tfo=true 、 udp=true 、 emoji=true 、exclude=(流量|官网)
 
 url=https://dler.cloud/subscribe/ABCDE?clash=vmess
 
-
-
 然后将需要 URLEncode 的部分进行处理：
 
 exclude=%28%E6%B5%81%E9%87%8F%7C%E5%AE%98%E7%BD%91%29
 
 url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
 
-
-
 接着将所有元素进行拼接：
 
 http://127.0.0.1:25500/sub?target=surge&tfo=true&udp=true&emoji=true&exclude=%28%E6%B5%81%E9%87%8F%7C%E5%AE%98%E7%BD%91%29&url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
 
-
-
 最后将该链接填写至 Surge 的订阅处就大功告成了。
-
 ```
 
 ### 配置档案
@@ -443,19 +354,14 @@ http://127.0.0.1:25500/sub?target=surge&tfo=true&udp=true&emoji=true&exclude=%28
 #### 调用地址 (档案)
 
 ```txt
-
 http://127.0.0.1:25500/getprofile?name=%NAME%&token=%TOKEN%
-
 ```
 
 #### 调用说明 (档案)
 
 | 调用参数 | 必要性 | 示例 | 解释 |
-
-| -------- | :----: | :------------------------ | :---------------------------------------------------------------------------------------------------------- |
-
+| -------- | :----: | :--: | ---- |
 | name | 必要 | profiles/formyairport.ini | 指配置档案的存储位置(可使用基于**pref 配置文件**的相对位置) |
-
 | token | 必要 | passwd | 为了安全考虑**必须设置token**（详见 [配置文件](#配置文件) 中 `[common] 部分` 对 `api_access_token` 的描述） |
 
 应当注意的是，此处文件内的参数**无需进行 URLEncode**，且此处的 `token` 与 `api_mode` 的状态无关。
@@ -469,7 +375,6 @@ http://127.0.0.1:25500/getprofile?name=%NAME%&token=%TOKEN%
 以上述 [进阶链接](#进阶链接) 的例子而言，`formyairport.ini` 内的内容应当是：
 
 ```txt
-
 [Profile]
 
 url=https://dler.cloud/subscribe/ABCDE?clash=vmess
@@ -485,7 +390,6 @@ udp=true
 emoji=true
 
 exclude=(流量|官网)
-
 ```
 
 在编辑并保存好 `formyairport.ini` 后，即可使用 `http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=passwd` 进行调用。
@@ -523,9 +427,7 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       api_access_token=passwd
-
       ```
 
 3.  **default_url**
@@ -538,15 +440,12 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       default_url=https://dler.cloud/subscribe/ABCDE?clash=vmess
-
       ```
 
     - 解释：
 
       ```txt
-
       此时订阅链接:
 
       http://127.0.0.1:25500/sub?target=clash
@@ -554,7 +453,6 @@ exclude=(流量|官网)
       等同于:
 
       http://127.0.0.1:25500/sub?target=clash&url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
-
       ```
 
 4.  **enable_insert**
@@ -576,11 +474,9 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       insert_url=ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpwYXNzd29yZA@www.example.com:1080#Example
 
       insert_url=ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpwYXNzd29yZA@www.example.com:1080#Example
-
       ```
 
 6.  **prepend_insert_url**
@@ -594,9 +490,7 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       exclude_remarks=(到期|剩余流量|时间|官网|产品|平台)
-
       ```
 
 8.  **include_remarks**
@@ -605,9 +499,7 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       include_remarks=(?<=美).*(BGP|GIA|IPLC)
-
       ```
 
 9.  **enable_filter**
@@ -629,7 +521,6 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       #仅保留加密方式为chacha20的节点
 
       filter_script=function filter(node) {\n    if(node.EncryptMethod.includes('chacha20'))\n        return true;\n    return false;\n}
@@ -637,7 +528,6 @@ exclude=(流量|官网)
       # 或者使用本地文件
 
       filter_script="path:/path/to/script.js"
-
       ```
 
     - node对象包含节点的全部信息，具体结构参见[此处](https://github.com/netchx/netch/blob/268bdb7730999daf9f27b4a81cfed5c36366d1ce/GSF.md)
@@ -648,9 +538,7 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       default_external_config=config/example_external_config.ini
-
       ```
 
 12. **base_path**
@@ -659,11 +547,9 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       base_path=base
 
       #外部配置只可以使用base文件夹下的本地配置文件基础
-
       ```
 
 13. **clash_rule_base**
@@ -672,7 +558,6 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       clash_rule_base=base/GeneralClashConfig.yml # 加载本地文件作为模板
 
       # 或者
@@ -680,7 +565,6 @@ exclude=(流量|官网)
       clash_rule_base=https://github.com/ACL4SSR/ACL4SSR/raw/master/Clash/GeneralClashConfig.yml
 
       # 加载ACL4SSR的 Github 中相关文件作为模板
-
       ```
 
 14. **surge_rule_base**
@@ -721,7 +605,6 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       proxy_config=SYSTEM # 使用系统代理
 
       # 或者
@@ -731,7 +614,6 @@ exclude=(流量|官网)
       # 或者
 
       proxy_config=cors:https://cors-anywhere.herokuapp.com/ # 使用CORS代理
-
       ```
 
 20. **proxy_ruleset**
@@ -752,11 +634,9 @@ exclude=(流量|官网)
     - 例如（设置为 true时）：
 
     ```txt
-
     [SS] 香港中转
 
     [VMess] 美国 GIA
-
     ```
 
 </details>
@@ -781,7 +661,6 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       stream_rule=^剩余流量：(.*?)\|总流量：(.*)$|total=$2&left=$1
 
       stream_rule=^剩余流量：(.*?) (.*)$|total=$1&left=$2
@@ -791,7 +670,6 @@ exclude=(流量|官网)
       stream_rule=^\[.*?\]剩余(.*?)@(?:.*)$|total=$1
 
       stream_rule=^.*?流量:(.*?) 剩:(?:.*)$|total=$1
-
       ```
 
 2.  **time_rule**
@@ -804,7 +682,6 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       time_rule=^过期时间：(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$|$1:$2:$3:$4:$5:$6
 
       time_rule=^到期时间(:|：)(\d+)-(\d+)-(\d+)$|$1:$2:$3:0:0:0
@@ -812,7 +689,6 @@ exclude=(流量|官网)
       time_rule=^Smart Access expire: (\d+)/(\d+)/(\d+)$|$1:$2:$3:0:0:0
 
       time_rule=^.*?流量:(?:.*?) 剩:(.*)$|left=$1d
-
       ```
 
 </details>
@@ -869,13 +745,11 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       sort_script=function compare(node_a, node_b) {\n    return node_a.Remark > node_b.Remark;\n}
 
       # 或者
 
       sort_script="path:/path/to/script.js"
-
       ```
 
 7.  **filter_deprecated_nodes**
@@ -937,7 +811,6 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       rename_node=中国@中
 
       rename_node=\(?((x|X)?(\d+)(\.?\d+)?)((\s?倍率?:?)|(x|X))\)?@(倍率:$1)
@@ -945,17 +818,14 @@ exclude=(流量|官网)
       rename_node=!!script:function rename(node) {\n  const geoinfo = JSON.parse(geoip(node.Hostname));\n  if(geoinfo.country_code == "CN")\n    return "CN " + node.Remark;\n}
 
       rename_node=!!script:path:/path/to/script.js
-
       ```
 
     - 特殊用法:
 
       ```ini
-
       rename_node=!!GROUPID=0!!中国@中
 
       # 指定此重命名仅在第一个订阅的节点中生效
-
       ```
 
 </details>
@@ -984,9 +854,7 @@ exclude=(流量|官网)
     - 例如:
 
     ```ini
-
     managed_config_prefix = http://192.168.1.5:25500
-
     ```
 
 3.  **config_update_interval**
@@ -995,11 +863,9 @@ exclude=(流量|官网)
     - 例如:
 
     ```ini
-
     config_update_interval = 86400
 
     # 每 86400 秒更新一次（即一天）
-
     ```
 
 4.  **config_update_strict**
@@ -1012,9 +878,7 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       quanx_device_id = XXXXXXX
-
       ```
 
 </details>
@@ -1045,21 +909,17 @@ exclude=(流量|官网)
     - 例如:
 
       ```ini
-
       rule=(流量|时间|应急),⌛time
 
       rule=(美|美国|United States),🇺🇸
-
       ```
 
     - 特殊用法:
 
       ```ini
-
       rule=!!GROUPID=0!!(流量|时间|应急),⌛time
 
       # 指定此 Emoji 规则仅在第一个订阅的节点中生效
-
       ```
 
 </details>
@@ -1104,7 +964,6 @@ exclude=(流量|官网)
     - 例如：
 
     ```ini
-
     ruleset=🍎 苹果服务,https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Apple.list
 
     # 表示引用 https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Apple.list 规则
@@ -1134,7 +993,6 @@ exclude=(流量|官网)
     ruleset=!!import:snippets/rulesets.txt
 
     # 表示引用本地的snippets/rulesets.txt规则
-
     ```
 
 </details>
@@ -1150,7 +1008,6 @@ exclude=(流量|官网)
 > \[] 前缀后的文字将被当作引用策略组
 
 ```ini
-
 custom_proxy_group=Group_Name`url-test|fallback|load-balance`Rule_1`Rule_2`...`test_url`interval[,timeout][,tolerance]
 
 custom_proxy_group=Group_Name`select`Rule_1`Rule_2`...
@@ -1176,7 +1033,6 @@ custom_proxy_group=🇯🇵 JP`select`沪日`日本`[]🇯🇵 日本延迟最�
 custom_proxy_group=节点选择`select`(^(?!.*(美国|日本)).*)
 
 # 表示创建一个叫 节点选择 的 select 策略组,并向其中**依次**添加名字不包含'美国'或'日本'的节点
-
 ```
 
 - 还可使用一些特殊筛选条件：
@@ -1196,7 +1052,6 @@ custom_proxy_group=节点选择`select`(^(?!.*(美国|日本)).*)
   GROUPID 和 INSERT 匹配支持range,如 1,!2,3-4,!5-6,7+,8-
 
   ```ini
-
   custom_proxy_group=g1`select`!!GROUPID=0`!!INSERT=0
 
   # 表示创建一个叫 g1 的 select 策略组,并向其中依次添加订阅链接中第一条订阅链接中的所有节点和配置文件中 insert_url 中的**第一个**节点
@@ -1224,7 +1079,6 @@ custom_proxy_group=节点选择`select`(^(?!.*(美国|日本)).*)
   custom_proxy_group=%TAG%`select`!!TAG`!!IN=🌍 国际媒体
 
   # 对每个 tag 自动生成同名分组，并把该分组挂到 🌍 国际媒体 中
-
   ```
 
   注意：此处的订阅链接指 `default_url` 和 `&url=` 中的订阅以及单链接节点（区别于配置文件中 insert_url）
@@ -1232,7 +1086,6 @@ custom_proxy_group=节点选择`select`(^(?!.*(美国|日本)).*)
 - 现在也可以使用2个条件组合来进行筛选，只有同时满足这2个筛选条件的节点才会被加入组内
 
   ```ini
-
   custom_proxy_group=g1hk`select`!!GROUPID=0!!(HGC|HKBN|PCCW|HKT|hk|港)
 
   # 属于订阅链接中的第一条订阅**且**名字含 HGC、HKBN、PCCW、HKT、hk、港 的节点
@@ -1240,49 +1093,40 @@ custom_proxy_group=节点选择`select`(^(?!.*(美国|日本)).*)
   custom_proxy_group=untaggedhk`select`!!UNTAGGED!!(HGC|HKBN|PCCW|HKT|hk|港)
 
   # 未打 tag 且名字含 HGC、HKBN、PCCW、HKT、hk、港 的节点
-
   ```
 
 - `%TAG%` 只会在存在 tag 节点时展开；例如：
 
   ```ini
-
   custom_proxy_group=🔰 节点选择`select`!!UNTAGGED
 
   custom_proxy_group=🌍 国际媒体`select`[]🔰 节点选择`[]♻️ 自动选择`[]🎯 全球直连
 
   custom_proxy_group=%TAG%`select`!!TAG`!!IN=🌍 国际媒体
-
   ```
 
   当订阅链接中包含 `tag:特殊组,https://example.com/sub` 时，会等价展开为：
 
   ```ini
-
   custom_proxy_group=🌍 国际媒体`select`[]🔰 节点选择`[]♻️ 自动选择`[]🎯 全球直连`[]特殊组
 
   custom_proxy_group=特殊组`select`!!GROUP=^特殊组$
-
   ```
 
 - 也可以使用js脚本筛选加入策略组的节点。A "filter" function with one argument which is an array of all available nodes should be defined in the script.
 
   ```ini
-
   custom_proxy_group=script`select`script:/path/to/script.js
 
   # 表示创建一个叫 script 的 select 策略组，其中的节点使用本地的/path/to/script.js脚本中的函数进行筛选
-
   ```
 
 - 也可以使用本地文件
 
   ```ini
-
   custom_proxy_group=!!import:snippets/groups.txt
 
   # 使用本地的snippets/groups.txt文件
-
   ```
 
 </details>
@@ -1302,21 +1146,17 @@ custom_proxy_group=节点选择`select`(^(?!.*(美国|日本)).*)
 - 精简接口步骤（此类别名默认在 pref 中启用）
 
   ```ini
-
   当设置 /clash=/sub?target=clash 时：
 
   访问 127.0.0.1/clash?url=xxx 即跳转至 127.0.0.1/sub?target=clash&url=xxx
-
   ```
 
 - 精简外部配置路径
 
   ```ini
-
   当设置 /mysub=/getprofile?name=aaa&token=bbb 时：
 
   访问 127.0.0.1/mysub 即跳转至 127.0.0.1/getprofile?name=aaa&token=bbb
-
   ```
 
 </details>
@@ -1337,9 +1177,7 @@ custom_proxy_group=节点选择`select`(^(?!.*(美国|日本)).*)
     - 例如:
 
       ```ini
-
       task=tick`0/10 * * * * ?`tick.js`3
-
       ```
 
 </details>
@@ -1459,11 +1297,9 @@ custom_proxy_group=节点选择`select`(^(?!.*(美国|日本)).*)
 即，如果你在外部配置中定义了
 
 ```txt
-
 emoji=(流量|时间|应急),🏳️‍🌈
 
 emoji=阿根廷,🇦🇷
-
 ```
 
 那么本程序只会匹配以上两个 Emoji，不再使用 主程序目录中配置文件 中所定义的 国别 Emoji
@@ -1473,14 +1309,11 @@ emoji=阿根廷,🇦🇷
 <summary><b>点击查看文件内容</b></summary>
 
 ```ini
-
 [custom]
 
 ;这是一个外部配置文件示例
 
 ;所有可能的自定义设置如下所示
-
-
 
 ;用于自定义组的选项 会覆盖 主程序目录中的配置文件 里的内容
 
@@ -1492,8 +1325,6 @@ emoji=阿根廷,🇦🇷
 
 ;Rule with "[]" prefix will be added directly.
 
-
-
 custom_proxy_group=Proxy`select`.*`[]AUTO`[]DIRECT`.*
 
 custom_proxy_group=UrlTest`url-test`.*`http://www.gstatic.com/generate_204`300,5,100
@@ -1504,25 +1335,17 @@ custom_proxy_group=LoadBalance`load-balance`.*`http://www.gstatic.com/generate_2
 
 custom_proxy_group=SSID`ssid`default_group`celluar=group0,ssid1=group1,ssid2=group2
 
-
-
 ;custom_proxy_group=g1`select`!!GROUPID=0
 
 ;custom_proxy_group=g2`select`!!GROUPID=1
 
 ;custom_proxy_group=v2ray`select`!!GROUP=V2RayProvider
 
-
-
 ;custom_proxy_group=g1hk`select`!!GROUPID=0!!(HGC|HKBN|PCCW|HKT|hk|港)
 
 ;custom_proxy_group=sstw`select`!!GROUP=V2RayProvider!!(深台|彰化|新北|台|tw)
 
 ;custom_proxy_group=provider`select`!!PROVIDER=prov1,prov2,prov3`fallback_nodes
-
-
-
-
 
 ;用于自定义规则的选项 会覆盖 主程序目录中的配置文件 里的内容
 
@@ -1558,8 +1381,6 @@ overwrite_original_rules=false
 
 ;ruleset=🐟 漏网之鱼,[]FINAL
 
-
-
 ;用于自定义基础配置的选项 会覆盖 主程序目录中的配置文件 里的内容
 
 clash_rule_base=base/forcerule.yml
@@ -1574,15 +1395,11 @@ clash_rule_base=base/forcerule.yml
 
 ;quanx_rule_base=base/quanx.conf
 
-
-
 ;用于自定义重命名的选项 会覆盖 主程序目录中的配置文件 里的内容
 
 ;rename=Test-(.*?)-(.*?)-(.*?)\((.*?)\)@\1\4x测试线路_自\2到\3
 
 ;rename=\(?((x|X)?(\d+)(\.?\d+)?)((\s?倍率?)|(x|X))\)?@$1x
-
-
 
 ;用于自定义 Emoji 的选项 会覆盖 主程序目录中的配置文件 里的内容
 
@@ -1594,22 +1411,17 @@ clash_rule_base=base/forcerule.yml
 
 ;emoji=阿根廷,🇦🇷
 
-
-
 ;用于包含或排除节点关键词的选项 会覆盖 主程序目录中的配置文件 里的内容
 
 ;include_remarks=
 
 ;exclude_remarks=
 
-
-
 ;[template]
 
 ;;局部作用于模板中的变量
 
 ;clash.dns.port=5353
-
 ```
 
 </details>
@@ -1637,17 +1449,14 @@ clash_rule_base=base/forcerule.yml
 1.  取值
 
     ```inja
-
     {{ global.clash.http_port }}
 
     # 获取 配置文件 中 clash.http_port 的值
-
     ```
 
 2.  单判断
 
     ```inja
-
     {% if request.clash.dns == "1" %}
 
     ···
@@ -1655,27 +1464,23 @@ clash_rule_base=base/forcerule.yml
     {% endif %}
 
     # 如果 URL 中的 clash.dns=1 时，判断成立
-
     ```
 
 3.  或判断
 
     ```inja
-
-    {% if request.target == "clash" or request.target == "clashr" %}
+    {% if request.target == "clash" %}
 
     ···
 
     {% endif %}
 
-    # 如果 URL 中的 target 为 clash 或者 clashr 时，判断成立
-
+    # 如果 URL 中的 target 为 clash 时，判断成立
     ```
 
 4.  如果...否则...
 
     ```inja
-
     {% if local.clash.new_field_name == "true" %}
 
     proxies: ~
@@ -1695,13 +1500,11 @@ clash_rule_base=base/forcerule.yml
     {% endif %}
 
     # 如果 外部配置中 clash.new_field_name=true 时，启用 新的 Clash 块名称，否则使用旧的名称
-
     ```
 
 5.  如果存在...则...(可避免请求中无对应参数时发生的报错)
 
     ```inja
-
     {% if exists("request.clash.dns") %}
 
     dns:
@@ -1713,13 +1516,11 @@ clash_rule_base=base/forcerule.yml
     {% endif %}
 
     # 如果 URL 中存在对 clash.dns 参数的任意指定时，判断成立 (可以和 如果···否则··· 等判断一起使用)
-
     ```
 
 6.  单判断，且如果参数不存在时使用默认值进行判断(可避免请求中无对应参数时发生的报错)
 
     ```inja
-
     dns:
 
       enabled: true
@@ -1745,7 +1546,6 @@ clash_rule_base=base/forcerule.yml
     # 如果 URL 中 doh 参数为 true 时，判断成立。
 
     # 如果 URL 中不存在 doh 参数时，将 clash.doh 参数设为默认值 false 再进行判断。
-
     ```
 
 模板内的引用有以下几类：
@@ -1753,17 +1553,14 @@ clash_rule_base=base/forcerule.yml
 1.  从 配置文件 中获取，判断前缀为 `global`
 
     ```inja
-
     socks-port: {{ global.clash.socks_port }}
 
     # 当配置文件中设定了 `clash.socks_port` 值时，将被引用
-
     ```
 
 2.  从 外部配置 中获取，判断前缀为 `local`
 
     ```inja
-
     {% if local.clash.new_field_name =="true" %}
 
     ···
@@ -1771,14 +1568,12 @@ clash_rule_base=base/forcerule.yml
     {% endif %}
 
     # 当外部配置中设定了 `clash.new_field_name=true` 时，该判断生效，其包含的···内容被引用
-
     ```
 
 3.  从 URL 链接中获取，判断前缀为 `request`，例如 `http://127.0.0.1:25500/sub?target=clash&url=www.xxx.com&clash.dns=1`
     - 从 URL 中所获得**包含**在 [进阶链接](#进阶链接) 内的参数进行判断
 
       ```inja
-
       {% if request.target == "clash" %}
 
       ···
@@ -1786,13 +1581,11 @@ clash_rule_base=base/forcerule.yml
       {% endif %}
 
       # 当 target=clash 时，该判断生效，其包含的··· 内容被引用
-
       ```
 
     - 从 URL 中所获得**不包含**在 [进阶链接](#进阶链接) 内的参数进行判断 (从上述链接可以看出 clash.dns 属于额外参数)
 
       ```inja
-
       {% if request.clash.dns == "1" %}
 
       dns:
@@ -1804,7 +1597,6 @@ clash_rule_base=base/forcerule.yml
       {% endif %}
 
       # 当 clash.dns=1 时，该判断生效，其包含的 dns 内容被引用
-
       ```
 
 #### 直接渲染
@@ -1812,9 +1604,7 @@ clash_rule_base=base/forcerule.yml
 在对模板功能进行调试或需要直接对模板进行渲染时，此时可以使用以下方式进行调用
 
 ```txt
-
 http://127.0.0.1:25500/render?path=xxx&额外的调试或控制参数
-
 ```
 
 此处 `path` 需要在 [配置文件](#配置文件) 中 `template_path` 所限定的路径内
@@ -1828,7 +1618,6 @@ http://127.0.0.1:25500/render?path=xxx&额外的调试或控制参数
 在程序当前工作目录内的 `generate.ini` 中设定文件块(`[xxx]`)，生成的文件名(path=xxx)以及其所需要包含的参数，例如：
 
 ```ini
-
 [test]
 
 path=output.conf
@@ -1837,14 +1626,11 @@ target=surge
 
 url=ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpwYXNzd29yZA@www.example.com:1080#Example
 
-
-
 [test_profile]
 
 path=output.yml
 
 profile=profiles/example_profile.ini
-
 ```
 
 使用 `subconverter -g` 启动本程序时，即可在程序根目录内生成名为 `output.conf` `output.yml` 的配置文件文本。
@@ -1858,13 +1644,11 @@ profile=profiles/example_profile.ini
 在程序当前工作目录内的 `gistconf.ini` 中添加 `Personal Access Token`（[示例文件位于 `base/gistconf.ini`](./base/gistconf.ini)，可在此基础上复制修改；令牌可[在此创建](https://github.com/settings/tokens/new?scopes=gist&description=Subconverter)）例如：
 
 ```ini
-
 [common]
 
 ;uncomment the following line and enter your token to enable upload function
 
 token = xxxxxxxxxxxxxxxxxxxxxxxx(所生成的 Personal Access Token)
-
 ```
 
 在 [调用地址](#调用地址) 或 [调用地址 (进阶)](#调用地址-进阶) 所生成的链接后加上 `&upload=true` 就会在更新好后自动上传 gist
@@ -1872,7 +1656,6 @@ token = xxxxxxxxxxxxxxxxxxxxxxxx(所生成的 Personal Access Token)
 此时，subconverter 程序窗口内会出现如下所示的**提示信息**：
 
 ```cmd
-
 No gist id is provided. Creating new gist...
 
 Writing to Gist success!
@@ -1884,7 +1667,6 @@ Path: surge4
 Raw URL: https://gist.githubusercontent.com/xxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/raw/surge4
 
 Gist owner: xxxx
-
 ```
 
 上方所提到的 `Raw URL: https://gist.githubusercontent.com/xxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/raw/surge4`
@@ -1914,21 +1696,15 @@ Gist owner: xxxx
 #### 调用地址 (规则转换)
 
 ```txt
-
 http://127.0.0.1:25500/getruleset?type=%TYPE%&url=%URL%&group=%GROUP%
-
 ```
 
 #### 调用说明 (规则转换)
 
 | 调用参数 | 必要性 | 示例 | 解释 |
-
-| -------- | :----------: | :------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-
+| -------- | :----: | :--: | ---- |
 | type | 必要 | 6 | 指想要生成的规则类型，用数字表示：1为Surge，2 为 Quantumult X，3 为 Clash domain rule-provider，4 为 Clash ipcidr rule-provider，5 为 Surge DOMAIN-SET，6 为 Clash classical ruleset |
-
 | url | 必要 | | 指待转换的规则链接，需要经过 [Base64](https://base64.us/) 处理 |
-
 | group | type=2时必选 | mygroup | 规则对应的策略组名，生成Quantumult X类型（type=2）时必须提供 |
 
 运行 subconverter 主程序后， 按照 [调用地址 (规则转换)](#调用地址-规则转换) 的对应内容替换即可得到指定类型的规则。

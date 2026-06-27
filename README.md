@@ -46,7 +46,6 @@ Main endpoints exposed by the current code:
 - `GET /version`
 - `GET /sub`
 - `HEAD /sub`
-- `GET /sub2clashr`
 - `GET /surge2clash`
 - `GET /getruleset`
 - `GET /getprofile`
@@ -66,7 +65,6 @@ When `api_mode=false`, two extra local/debug endpoints are available:
 | Type                             | As Source | As Target | `target` value |
 | -------------------------------- | :-------: | :-------: | -------------- |
 | Clash                            |     ✓     |     ✓     | `clash`        |
-| ClashR                           |     ✓     |     ✓     | `clashr`       |
 | Quantumult                       |     ✓     |     ✓     | `quan`         |
 | Quantumult X                     |     ✓     |     ✓     | `quanx`        |
 | Loon                             |     ✓     |     ✓     | `loon`         |
@@ -157,7 +155,6 @@ payload:
 Quick conversion helpers:
 
 ```txt
-http://127.0.0.1:25500/sub2clashr?sublink=...
 http://127.0.0.1:25500/surge2clash?link=...
 ```
 

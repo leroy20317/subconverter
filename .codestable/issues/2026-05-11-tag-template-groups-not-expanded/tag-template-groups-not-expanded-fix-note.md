@@ -33,7 +33,7 @@ Loon 目标导出时会保留原始 `%TAG% = select,DIRECT`，而不是展开为
 
 ## 5. 验证结果
 
-- 对照 `subexport.cpp` 中各 target 的实现确认：Clash / ClashR / Surge / Quantumult / Quantumult X / Mellow / Loon / sing-box 现在都统一经过 `buildProxyGroups(...)`
+- 对照 `subexport.cpp` 中各 target 的实现确认：Clash / Surge / Quantumult / Quantumult X / Mellow / Loon / sing-box 现在都统一经过 `buildProxyGroups(...)`
 - 已检查 `src/generator/config/subexport.cpp` 的 lint 诊断，未发现新增问题
 - 尚未补自动化回归用例；最终导出结果建议继续用带 `%TAG%` 的配置做一次 Loon / sing-box 实测确认
 

@@ -26,11 +26,11 @@
 
 extern string_array ss_ciphers, ssr_ciphers;
 
-const string_array clashr_protocols = {
+const string_array clash_ssr_protocols = {
     "origin", "auth_sha1_v4", "auth_aes128_md5", "auth_aes128_sha1", "auth_chain_a",
     "auth_chain_b"
 };
-const string_array clashr_obfs = {
+const string_array clash_ssr_obfs = {
     "plain", "http_simple", "http_post", "random_head", "tls1.2_ticket_auth",
     "tls1.2_ticket_fastauth"
 };
@@ -350,9 +350,8 @@ groupGenerate(const std::string &rule, std::vector<Proxy> &nodelist, string_arra
     }
 }
 
-void
-proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupConfigs &extra_proxy_group, bool clashR,
-             extra_settings &ext) {
+void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupConfigs &extra_proxy_group,
+                  extra_settings &ext) {
     YAML::Node proxies, original_groups;
     std::vector<Proxy> nodelist;
     string_array remarks_list;
@@ -500,14 +499,13 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
             case ProxyType::ShadowsocksR:
                 //ignoring all nodes with unsupported obfs, protocols and encryption
                 if (ext.filter_deprecated) {
-                    if (!clashR &&
-                        std::find(clash_ssr_ciphers.cbegin(), clash_ssr_ciphers.cend(), x.EncryptMethod) ==
+                    if (std::find(clash_ssr_ciphers.cbegin(), clash_ssr_ciphers.cend(), x.EncryptMethod) ==
                         clash_ssr_ciphers.cend())
                         continue;
-                    if (std::find(clashr_protocols.cbegin(), clashr_protocols.cend(), x.Protocol) ==
-                        clashr_protocols.cend())
+                    if (std::find(clash_ssr_protocols.cbegin(), clash_ssr_protocols.cend(), x.Protocol) ==
+                        clash_ssr_protocols.cend())
                         continue;
-                    if (std::find(clashr_obfs.cbegin(), clashr_obfs.cend(), x.OBFS) == clashr_obfs.cend())
+                    if (std::find(clash_ssr_obfs.cbegin(), clash_ssr_obfs.cend(), x.OBFS) == clash_ssr_obfs.cend())
                         continue;
                 }
 
@@ -518,13 +516,8 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
                     singleproxy["password"].SetTag("str");
                 singleproxy["protocol"] = x.Protocol;
                 singleproxy["obfs"] = x.OBFS;
-                if (clashR) {
-                    singleproxy["protocolparam"] = x.ProtocolParam;
-                    singleproxy["obfsparam"] = x.OBFSParam;
-                } else {
-                    singleproxy["protocol-param"] = x.ProtocolParam;
-                    singleproxy["obfs-param"] = x.OBFSParam;
-                }
+                singleproxy["protocol-param"] = x.ProtocolParam;
+                singleproxy["obfs-param"] = x.OBFSParam;
                 break;
             case ProxyType::SOCKS5:
                 singleproxy["type"] = "socks5";
@@ -836,7 +829,7 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
         // sees in https://dreamacro.github.io/clash/configuration/outbound.html#snell
         if (udp && x.Type != ProxyType::Snell && x.Type != ProxyType::TUIC)
             singleproxy["udp"] = true;
-        if (!clashR && !x.UnderlyingProxy.empty())
+        if (!x.UnderlyingProxy.empty())
             singleproxy["dialer-proxy"] = x.UnderlyingProxy;
         if (proxy_block)
             singleproxy.SetStyle(YAML::EmitterStyle::Block);
@@ -964,7 +957,7 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
 std::string proxyToClash(std::vector<Proxy> &nodes, const std::string &base_conf,
                          std::vector<RulesetContent> &ruleset_content_array,
                          const ProxyGroupConfigs &extra_proxy_group,
-                         bool clashR, extra_settings &ext) {
+                         extra_settings &ext) {
     YAML::Node yamlnode;
 
     try {
@@ -974,7 +967,7 @@ std::string proxyToClash(std::vector<Proxy> &nodes, const std::string &base_conf
         return "";
     }
 
-    proxyToClash(nodes, yamlnode, extra_proxy_group, clashR, ext);
+    proxyToClash(nodes, yamlnode, extra_proxy_group, ext);
 
     if (ext.nodelist)
         return YAML::Dump(yamlnode);
