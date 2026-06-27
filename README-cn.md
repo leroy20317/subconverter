@@ -361,7 +361,7 @@ http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&emoji=%EMOJI%····
 
 | fdn | 可选 | true / false | 用于过滤目标类型不支持的节点，默认为 true |
 
-| expand | 可选 | true / false | 用于在 API 端处理或转换 Surge, QuantumultX, Clash 的规则列表，即是否将规则全文置入订阅中，默认为 true，设置为 false 则不会将规则全文写进订阅 |
+| expand | 可选 | true / false | 用于在 API 端处理或转换 Surge, QuantumultX, Clash 的规则列表，即是否将规则全文置入订阅中，默认为 false，只有设置为 true 时才会将规则全文写进订阅 |
 
 | append_info | 可选 | true / false | 用于输出包含流量或到期信息的节点, 默认为 true，设置为 false 则取消输出 |
 

@@ -416,9 +416,6 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
     /// check other flags
     ext.authorized = authorized;
     ext.append_proxy_type = argAppendType.get(global.appendType);
-    if ((argTarget == "clash" || argTarget == "clashr") && argGenClashScript.is_undef())
-        argExpandRulesets.define(true);
-
     ext.clash_proxies_style = global.clashProxiesStyle;
     ext.clash_proxy_groups_style = global.clashProxyGroupsStyle;
 
@@ -1327,7 +1324,8 @@ int simpleGenerator() {
             profile = ini.get("profile");
             request.argument.emplace("name", urlEncode(profile));
             request.argument.emplace("token", global.accessToken);
-            request.argument.emplace("expand", "true");
+            if (ini.item_exist("expand"))
+                request.argument.emplace("expand", ini.get("expand"));
             content = getProfile(request, response);
         } else {
             if (ini.get_bool("direct")) {
@@ -1344,7 +1342,6 @@ int simpleGenerator() {
                 continue;
             }
             ini.get_items(allItems);
-            allItems.emplace("expand", "true");
             for (auto &y: allItems) {
                 if (y.first == "path")
                     continue;
