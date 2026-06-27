@@ -56,9 +56,7 @@
 | SSD                          |     ✓      |      ✓       | ssd                 |
 | SSR                          |     ✓      |      ✓       | ssr                 |
 | Surfboard                    |     ✓      |      ✓       | surfboard           |
-| Surge 3                      |     ✓      |      ✓       | surge&ver=3         |
-| Surge 4                      |     ✓      |      ✓       | surge&ver=4         |
-| Surge 5                      |     ✓      |      ✓       | surge&ver=5         |
+| Surge                        |     ✓      |      ✓       | surge               |
 | Trojan                       |     ✓      |      ✓       | trojan              |
 | V2Ray                        |     ✓      |      ✓       | v2ray               |
 | sing-box                     |     ✓      |      ✓       | singbox             |
@@ -77,9 +75,7 @@
 
 4.  目标类型为 `auto` 时，会根据请求的 `User-Agent` 自动判断输出的目标类型，匹配逻辑实现于 `src/handler/interfaces.cpp` 中。
 
-5.  Surge 的 AnyTLS 导出需使用 `target=surge&ver=5`。
-
-6.  Quantumult X 的 AnyTLS 导出会使用 `tls-host` 表示标准 TLS；当节点带有 `PublicKey` / `ShortId` 时，会自动输出 `reality-base64-pubkey` / `reality-hex-shortid`。
+5.  Quantumult X 的 AnyTLS 导出会使用 `tls-host` 表示标准 TLS；当节点带有 `PublicKey` / `ShortId` 时，会自动输出 `reality-base64-pubkey` / `reality-hex-shortid`。
 
 ---
 
@@ -101,7 +97,7 @@ http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&config=%CONFIG%
 
 | -------- | :----: | :------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
-| target | 必要 | surge&ver=4 | 指想要生成的配置类型，详见上方 [支持类型](#支持类型) 中的参数 |
+| target | 必要 | surge | 指想要生成的配置类型，详见上方 [支持类型](#支持类型) 中的参数 |
 
 | url | 必要 | https%3A%2F%2Fwww.xxx.com | 指机场所提供的订阅链接或代理节点的分享链接，需要经过 [URLEncode](https://www.urlencoder.org/) 处理 |
 
@@ -311,7 +307,7 @@ http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&emoji=%EMOJI%····
 
 | ------------- | :----: | :--------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
-| target | 必要 | surge&ver=4 | 指想要生成的配置类型，详见上方 [支持类型](#支持类型) 中的参数 |
+| target | 必要 | surge | 指想要生成的配置类型，详见上方 [支持类型](#支持类型) 中的参数 |
 
 | url | 可选 | https%3A%2F%2Fwww.xxx.com | 指机场所提供的订阅链接或代理节点的分享链接，需要经过 [URLEncode](https://www.urlencoder.org/) 处理，**可选的前提是在 `default_url` 中进行指定**。也可以使用 data URI。可使用 `tag:xxx,https%3A%2F%2Fwww.xxx.com` 为该订阅写入独立 Tag 字段，用于配置文件中的`!!TAG`、`%TAG%`、`!!UNTAGGED` 等匹配；原有 `!!GROUP=XXX` 仍匹配源订阅自带的 Group 字段，未设置 tag 时不会再导出空的 group 字段 |
 
@@ -371,17 +367,42 @@ http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&emoji=%EMOJI%····
 
 | prepend | 可选 | true / false | 用于设置插入 `insert_url` 时是否插入到所有节点前面，默认为 true |
 
-| classic | 可选 | true / false | 用于设置是否生成 Clash classical rule-provider |
-
 | tls13 | 可选 | true / false | 用于设置是否为节点增加tls1.3开启参数 |
 
 | new_name | 可选 | true / false | 如果设置为 true，则将启用 Clash 的新组名称 (proxies, proxy-groups, rules) |
+
+#### Clash/mihomo 规则集托管
+
+当生成 Clash/mihomo 托管配置时，远程 `ruleset` 会统一生成为 `behavior: classical` 的 `rule-providers`。规则集内容不会再按 `DOMAIN` / `IP-CIDR` 拆成多个 provider，因此 `DOMAIN-KEYWORD`、`DOMAIN-SUFFIX`、`IP-CIDR` 等 classical 支持的规则会保留在同一个 provider 中。
+
+示例输出：
+
+```yaml
+rules:
+  - RULE-SET,Example,Proxy
+
+rule-providers:
+  Example:
+    type: http
+    behavior: classical
+    url: http://127.0.0.1:25500/getruleset?type=6&url=...
+    path: ./providers/xxx.yaml
+```
+
+对应 provider 内容示例：
+
+```yaml
+payload:
+  - DOMAIN-SUFFIX,google.com
+  - DOMAIN-KEYWORD,google
+  - IP-CIDR,1.1.1.1/32,no-resolve
+```
 
 举个例子：
 
 ```txt
 
-有订阅 `https://dler.cloud/subscribe/ABCDE?clash=vmess`，想转换成 Surge 4 的订阅，且需要开启 TFO 和 UDP
+有订阅 `https://dler.cloud/subscribe/ABCDE?clash=vmess`，想转换成 Surge 的订阅，且需要开启 TFO 和 UDP
 
 顺便再给节点名加上 EMOJI 同时排除掉订阅中显示流量和官网的节点（节点名为"剩余流量：1024G"，"官网地址：dler.cloud"）
 
@@ -389,7 +410,7 @@ http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&emoji=%EMOJI%····
 
 首先确认需要用到的参数：
 
-target=surge&ver=4 、 tfo=true 、 udp=true 、 emoji=true 、exclude=(流量|官网)
+target=surge 、 tfo=true 、 udp=true 、 emoji=true 、exclude=(流量|官网)
 
 url=https://dler.cloud/subscribe/ABCDE?clash=vmess
 
@@ -405,7 +426,7 @@ url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
 
 接着将所有元素进行拼接：
 
-http://127.0.0.1:25500/sub?target=surge&ver=4&tfo=true&udp=true&emoji=true&exclude=%28%E6%B5%81%E9%87%8F%7C%E5%AE%98%E7%BD%91%29&url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
+http://127.0.0.1:25500/sub?target=surge&tfo=true&udp=true&emoji=true&exclude=%28%E6%B5%81%E9%87%8F%7C%E5%AE%98%E7%BD%91%29&url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
 
 
 
@@ -1813,8 +1834,6 @@ http://127.0.0.1:25500/render?path=xxx&额外的调试或控制参数
 path=output.conf
 
 target=surge
-
-ver=4
 
 url=ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpwYXNzd29yZA@www.example.com:1080#Example
 

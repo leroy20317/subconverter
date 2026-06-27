@@ -54,7 +54,6 @@ struct UAProfile {
     std::string version_target;
     std::string target;
     tribool clash_new_name = tribool();
-    int surge_ver = -1;
 };
 
 const std::vector<UAProfile> UAMatchList = {
@@ -76,12 +75,7 @@ const std::vector<UAProfile> UAMatchList = {
     {"Qv2ray", "", "", "v2ray"},
     {"Shadowrocket", "", "", "mixed"},
     {"Surfboard", "", "", "surfboard"},
-    {"Surge", "\\/([0-9.]+).*x86", "906", "surge", false, 4}, /// Surge for Mac (supports VMess)
-    {"Surge", "\\/([0-9.]+).*x86", "368", "surge", false, 3},
-    /// Surge for Mac (supports new rule types and Shadowsocks without plugin)
-    {"Surge", "\\/([0-9.]+)", "1419", "surge", false, 4}, /// Surge iOS 4 (first version)
-    {"Surge", "\\/([0-9.]+)", "900", "surge", false, 3}, /// Surge iOS 3 (approx)
-    {"Surge", "", "", "surge", false, 2}, /// any version of Surge as fallback
+    {"Surge", "", "", "surge"},
     {"Trojan-Qt5", "", "", "trojan"},
     {"V2rayU", "", "", "v2ray"},
     {"V2RayX", "", "", "v2ray"}
@@ -110,7 +104,7 @@ bool verGreaterEqual(const std::string &src_ver, const std::string &target_ver) 
     return !bool(target_stream >> target_part);
 }
 
-void matchUserAgent(const std::string &user_agent, std::string &target, tribool &clash_new_name, int &surge_ver) {
+void matchUserAgent(const std::string &user_agent, std::string &target, tribool &clash_new_name) {
     if (user_agent.empty())
         return;
     for (const UAProfile &x: UAMatchList) {
@@ -124,8 +118,6 @@ void matchUserAgent(const std::string &user_agent, std::string &target, tribool 
             }
             target = x.target;
             clash_new_name = x.clash_new_name;
-            if (x.surge_ver != -1)
-                surge_ver = x.surge_ver;
             return;
         }
     }
@@ -296,11 +288,10 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
     auto &argument = request.argument;
     int *status_code = &response.status_code;
 
-    std::string argTarget = getUrlArg(argument, "target"), argSurgeVer = getUrlArg(argument, "ver");
+    std::string argTarget = getUrlArg(argument, "target");
     tribool argClashNewField = getUrlArg(argument, "new_name");
-    int intSurgeVer = !argSurgeVer.empty() ? to_int(argSurgeVer, 3) : 3;
     if (argTarget == "auto")
-        matchUserAgent(request.headers["User-Agent"], argTarget, argClashNewField, intSurgeVer);
+        matchUserAgent(request.headers["User-Agent"], argTarget, argClashNewField);
 
     /// don't try to load groups or rulesets when generating simple subscriptions
     bool lSimpleSubscription = false;
@@ -354,9 +345,7 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
     tribool argSkipCertVerify = getUrlArg(argument, "scv"), argFilterDeprecated = getUrlArg(argument,
         "fdn"), argExpandRulesets = getUrlArg(
         argument, "expand"), argAppendUserinfo = getUrlArg(argument, "append_info");
-    tribool argPrependInsert = getUrlArg(argument, "prepend"), argGenClassicalRuleProvider = getUrlArg(argument,
-        "classic"), argTLS13 = getUrlArg(
-        argument, "tls13");
+    tribool argPrependInsert = getUrlArg(argument, "prepend"), argTLS13 = getUrlArg(argument, "tls13");
 
     std::string base_content, output_content;
     ProxyGroupConfigs lCustomProxyGroups = global.customProxyGroups;
@@ -415,7 +404,6 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
         req_arg_map[x.first] = x.second;
     }
     req_arg_map["target"] = argTarget;
-    req_arg_map["ver"] = std::to_string(intSurgeVer);
 
     /// save template variables
     template_args tpl_args;
@@ -447,7 +435,6 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
     ext.filter_deprecated = argFilterDeprecated.get(global.filterDeprecated);
     ext.clash_new_field_name = argClashNewField.get(global.clashUseNewField);
     ext.clash_script = argGenClashScript.get();
-    ext.clash_classical_ruleset = argGenClassicalRuleProvider.get();
     if (!argExpandRulesets)
         ext.clash_new_field_name = true;
     else
@@ -722,24 +709,23 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
             break;
         case "surge"_hash:
 
-            writeLog(0, "Generate target: Surge " + std::to_string(intSurgeVer), LOG_LEVEL_INFO);
+            writeLog(0, "Generate target: Surge", LOG_LEVEL_INFO);
 
             if (ext.nodelist) {
-                output_content = proxyToSurge(nodes, base_content, dummy_ruleset, dummy_group, intSurgeVer, ext);
+                output_content = proxyToSurge(nodes, base_content, dummy_ruleset, dummy_group, ext);
 
                 if (argUpload)
-                    uploadGist("surge" + argSurgeVer + "list", argUploadPath, output_content, true);
+                    uploadGist("surgelist", argUploadPath, output_content, true);
             } else {
                 if (render_template(fetchFile(lSurgeBase, proxy, global.cacheConfig), tpl_args, base_content,
                                     global.templatePath) != 0) {
                     *status_code = 400;
                     return base_content;
                 }
-                output_content = proxyToSurge(nodes, base_content, lRulesetContent, lCustomProxyGroups, intSurgeVer,
-                                              ext);
+                output_content = proxyToSurge(nodes, base_content, lRulesetContent, lCustomProxyGroups, ext);
 
                 if (argUpload)
-                    uploadGist("surge" + argSurgeVer, argUploadPath, output_content, true);
+                    uploadGist("surge", argUploadPath, output_content, true);
 
                 if (global.writeManagedConfig && !global.managedConfigPrefix.empty())
                     output_content = "#!MANAGED-CONFIG " + managed_url + (interval
@@ -756,7 +742,7 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
                 *status_code = 400;
                 return base_content;
             }
-            output_content = proxyToSurge(nodes, base_content, lRulesetContent, lCustomProxyGroups, -3, ext);
+            output_content = proxyToSurge(nodes, base_content, lRulesetContent, lCustomProxyGroups, ext, true);
             if (argUpload)
                 uploadGist("surfboard", argUploadPath, output_content, true);
 

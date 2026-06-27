@@ -997,7 +997,7 @@ std::string proxyToClash(std::vector<Proxy> &nodes, const std::string &base_conf
         }
 
         renderClashScript(yamlnode, ruleset_content_array, ext.managed_config_prefix, ext.clash_script,
-                          ext.overwrite_original_rules, ext.clash_classical_ruleset);
+                          ext.overwrite_original_rules);
         return YAML::Dump(yamlnode);
     }
 
@@ -1039,7 +1039,7 @@ std::string generatePeer(Proxy &node, bool client_id_as_reserved = false) {
 std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf,
                          std::vector<RulesetContent> &ruleset_content_array,
                          const ProxyGroupConfigs &extra_proxy_group,
-                         int surge_ver, extra_settings &ext) {
+                         extra_settings &ext, bool surfboard) {
     INIReader ini;
     std::string output_nodelist;
     std::vector<Proxy> nodelist;
@@ -1092,13 +1092,8 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
 
         switch (x.Type) {
             case ProxyType::Shadowsocks:
-                if (surge_ver >= 3 || surge_ver == -3) {
-                    proxy = "ss, " + hostname + ", " + port + ", encrypt-method=" + method + ", password=" +
-                            password;
-                } else {
-                    proxy = "custom, " + hostname + ", " + port + ", " + method + ", " + password +
-                            ", https://github.com/pobizhe/SSEncrypt/raw/master/SSEncrypt.module";
-                }
+                proxy = "ss, " + hostname + ", " + port + ", encrypt-method=" + method + ", password=" +
+                        password;
                 if (!plugin.empty()) {
                     switch (hash_(plugin)) {
                         case "simple-obfs"_hash:
@@ -1112,8 +1107,6 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
                 }
                 break;
             case ProxyType::VMess:
-                if (surge_ver < 4 && surge_ver != -3)
-                    continue;
                 proxy = "vmess, " + hostname + ", " + port + ", username=" + id + ", tls=" +
                         (tlssecure ? "true" : "false") + ", vmess-aead=" + (x.AlterId == 0 ? "true" : "false");
                 if (tlssecure && !tls13.is_undef())
@@ -1140,7 +1133,7 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
                     proxy += ", skip-cert-verify=" + scv.get_str();
                 break;
             case ProxyType::ShadowsocksR:
-                if (ext.surge_ssr_path.empty() || surge_ver < 2)
+                if (ext.surge_ssr_path.empty())
                     continue;
                 proxy = "external, exec=\"" + ext.surge_ssr_path + "\", args=\"";
                 args = {
@@ -1173,7 +1166,7 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
                     proxy += ", skip-cert-verify=" + scv.get_str();
                 break;
             case ProxyType::HTTPS:
-                if (surge_ver == -3) {
+                if (surfboard) {
                     proxy = "https, " + hostname + ", " + port + ", " + username + ", " + password;
                     if (!scv.is_undef())
                         proxy += ", skip-cert-verify=" + scv.get_str();
@@ -1191,8 +1184,6 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
                     proxy += ", skip-cert-verify=" + scv.get_str();
                 break;
             case ProxyType::Trojan:
-                if (surge_ver < 4 && surge_ver != -3)
-                    continue;
                 proxy = "trojan, " + hostname + ", " + port + ", password=" + password;
                 if (x.SnellVersion != 0)
                     proxy += ", version=" + std::to_string(x.SnellVersion);
@@ -1222,7 +1213,7 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
                     proxy += ", version=" + std::to_string(x.SnellVersion);
                 break;
             case ProxyType::Hysteria2:
-                if (surge_ver < 4)
+                if (surfboard)
                     continue;
                 proxy = "hysteria2, " + hostname + ", " + port + ", password=" + password;
                 if (!x.DownMbps.empty()) {
@@ -1245,7 +1236,7 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
                     proxy += ",port-hopping=" + x.Ports;
                 break;
             case ProxyType::AnyTLS:
-                if (surge_ver < 5)
+                if (surfboard)
                     continue;
                 proxy = "anytls, " + hostname + ", " + port + ", password=" + password;
                 if (!x.SNI.empty())
@@ -1256,8 +1247,6 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
                     proxy += ", server-cert-fingerprint-sha256=" + x.Fingerprint;
                 break;
             case ProxyType::WireGuard:
-                if (surge_ver < 4 && surge_ver != -3)
-                    continue;
                 section = randomStr(5);
                 real_section = "WireGuard " + section;
                 proxy = "wireguard, section-name=" + section;
@@ -1313,8 +1302,6 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
             case ProxyGroupType::Fallback:
                 break;
             case ProxyGroupType::LoadBalance:
-                if (surge_ver < 1 && surge_ver != -3)
-                    continue;
                 break;
             case ProxyGroupType::SSID:
                 group = x.TypeStr() + ",default=" + x.Proxies[0] + ",";
@@ -1361,7 +1348,7 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
     }
 
     if (ext.enable_rule_generator)
-        rulesetToSurge(ini, ruleset_content_array, surge_ver, ext.overwrite_original_rules,
+        rulesetToSurge(ini, ruleset_content_array, surfboard ? -3 : 3, ext.overwrite_original_rules,
                        ext.managed_config_prefix);
 
     return ini.to_string();

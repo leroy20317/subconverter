@@ -307,16 +307,14 @@ std::string findFileName(const std::string &path)
     return path.substr(pos + 1, pos2 - pos - 1);
 }
 
-int renderClashScript(YAML::Node &base_rule, std::vector<RulesetContent> &ruleset_content_array, const std::string &remote_path_prefix, bool script, bool overwrite_original_rules, bool clash_classical_ruleset)
+int renderClashScript(YAML::Node &base_rule, std::vector<RulesetContent> &ruleset_content_array, const std::string &remote_path_prefix, bool script, bool overwrite_original_rules)
 {
     nlohmann::json data;
-    std::string match_group, geoips, retrieved_rules;
+    std::string match_group, geoips;
     std::string strLine, rule_group, rule_path, rule_path_typed, rule_name, old_rule_name;
-    std::stringstream strStrm;
     string_array vArray, groups;
-    string_map keywords, urls, names;
-    std::map<std::string, bool> has_domain, has_ipcidr;
-    std::map<std::string, int> ruleset_interval, rule_type;
+    string_map urls, names;
+    std::map<std::string, int> ruleset_interval;
     string_array rules;
     int index = 0;
 
@@ -354,191 +352,41 @@ int renderClashScript(YAML::Node &base_rule, std::vector<RulesetContent> &rulese
         }
         else
         {
-            if(x.rule_type == RULESET_CLASH_IPCIDR || x.rule_type == RULESET_CLASH_DOMAIN || x.rule_type == RULESET_CLASH_CLASSICAL)
-            {
-                //rule_name = std::to_string(hash_(rule_group + rule_path));
-                rule_name = old_rule_name = urlDecode(findFileName(rule_path));
-                int idx = 2;
-                while(std::find(groups.begin(), groups.end(), rule_name) != groups.end())
-                    rule_name = old_rule_name + " " + std::to_string(idx++);
-                names[rule_name] = rule_group;
-                urls[rule_name] = "*" + rule_path;
-                rule_type[rule_name] = x.rule_type;
-                ruleset_interval[rule_name] = x.update_interval;
-                switch(x.rule_type)
-                {
-                case RULESET_CLASH_IPCIDR:
-                    has_ipcidr[rule_name] = true;
-                    break;
-                case RULESET_CLASH_DOMAIN:
-                    has_domain[rule_name] = true;
-                    break;
-                case RULESET_CLASH_CLASSICAL:
-                    break;
-                }
-                if(!script)
-                    rules.emplace_back("RULE-SET," + rule_name + "," + rule_group);
-                groups.emplace_back(rule_name);
-                continue;
-            }
-            if(!remote_path_prefix.empty())
-            {
-                if(fileExist(rule_path, true) || isLink(rule_path))
-                {
-                    //rule_name = std::to_string(hash_(rule_group + rule_path));
-                    rule_name = old_rule_name = urlDecode(findFileName(rule_path));
-                    int idx = 2;
-                    while(std::find(groups.begin(), groups.end(), rule_name) != groups.end())
-                        rule_name = old_rule_name + " " + std::to_string(idx++);
-                    names[rule_name] = rule_group;
-                    urls[rule_name] = rule_path_typed;
-                    rule_type[rule_name] = x.rule_type;
-                    ruleset_interval[rule_name] = x.update_interval;
-                    if(clash_classical_ruleset)
-                    {
-                        if(!script)
-                            rules.emplace_back("RULE-SET," + rule_name + "," + rule_group);
-                        groups.emplace_back(rule_name);
-                        continue;
-                    }
-                }
-                else
-                    continue;
-            }
-
-            retrieved_rules = x.rule_content.get();
-            if(retrieved_rules.empty())
-            {
-                writeLog(0, "Failed to fetch ruleset or ruleset is empty: '" + x.rule_path + "'!", LOG_LEVEL_WARNING);
-                continue;
-            }
-
-            retrieved_rules = convertRuleset(retrieved_rules, x.rule_type);
-            char delimiter = getLineBreak(retrieved_rules);
-
-            strStrm.clear();
-            strStrm<<retrieved_rules;
-            std::string::size_type lineSize;
-            bool has_no_resolve = false;
-            while(getline(strStrm, strLine, delimiter))
-            {
-                lineSize = strLine.size();
-                if(lineSize && strLine[lineSize - 1] == '\r') //remove line break
-                    strLine.erase(--lineSize);
-                if(!lineSize || strLine[0] == ';' || strLine[0] == '#' || (lineSize >= 2 && strLine[0] == '/' && strLine[1] == '/')) //empty lines and comments are ignored
-                    continue;
-
-                if(startsWith(strLine, "DOMAIN-KEYWORD,"))
-                {
-                    if(script)
-                    {
-                        vArray = split(strLine, ",");
-                        if(vArray.size() < 2)
-                            continue;
-                        if(keywords.find(rule_name) == keywords.end())
-                            keywords[rule_name] = "\"" + trim(vArray[1]) + "\"";
-                        else
-                            keywords[rule_name] += ",\"" + trim(vArray[1]) + "\"";
-                    }
-                    else
-                    {
-                        vArray = split(strLine, ",");
-                        if(vArray.size() < 2)
-                        {
-                            strLine = vArray[0] + "," + rule_group;
-                        }
-                        else
-                        {
-                            strLine = vArray[0] + "," + trim(vArray[1]) + "," + rule_group;
-                            if(vArray.size() > 2)
-                                strLine += "," + vArray[2];
-                        }
-                        rules.emplace_back(strLine);
-                    }
-                }
-                else if(!has_domain[rule_name] && (startsWith(strLine, "DOMAIN,") || startsWith(strLine, "DOMAIN-SUFFIX,")))
-                    has_domain[rule_name] = true;
-                else if(!has_ipcidr[rule_name] && (startsWith(strLine, "IP-CIDR,") || startsWith(strLine, "IP-CIDR6,")))
-                {
-                    has_ipcidr[rule_name] = true;
-                    if(strLine.find(",no-resolve") != std::string::npos)
-                        has_no_resolve = true;
-                }
-            }
-            if(has_domain[rule_name] && !script)
-                rules.emplace_back("RULE-SET," + rule_name + " (Domain)," + rule_group);
-            if(has_ipcidr[rule_name] && !script)
-            {
-                if(has_no_resolve)
-                    rules.emplace_back("RULE-SET," + rule_name + " (IP-CIDR)," + rule_group + ",no-resolve");
-                else
-                    rules.emplace_back("RULE-SET," + rule_name + " (IP-CIDR)," + rule_group);
-            }
-            if(!has_domain[rule_name] && !has_ipcidr[rule_name] && !script)
+            rule_name = old_rule_name = urlDecode(findFileName(rule_path));
+            int idx = 2;
+            while(std::find(groups.begin(), groups.end(), rule_name) != groups.end())
+                rule_name = old_rule_name + " " + std::to_string(idx++);
+            names[rule_name] = rule_group;
+            urls[rule_name] = rule_path_typed.empty() ? rule_path : rule_path_typed;
+            ruleset_interval[rule_name] = x.update_interval;
+            if(!script)
                 rules.emplace_back("RULE-SET," + rule_name + "," + rule_group);
-            if(std::find(groups.begin(), groups.end(), rule_name) == groups.end())
-                groups.emplace_back(rule_name);
+            groups.emplace_back(rule_name);
+            continue;
         }
     }
     for(std::string &x : groups)
     {
-        std::string url = urls[x], keyword = keywords[x], name = names[x];
-        bool group_has_domain = has_domain[x], group_has_ipcidr = has_ipcidr[x];
+        std::string url = urls[x], name = names[x];
         int interval = ruleset_interval[x];
 
-        if(group_has_domain)
-        {
-            std::string yaml_key = x;
-            if(rule_type[x] != RULESET_CLASH_DOMAIN)
-                yaml_key += " (Domain)";
-            base_rule["rule-providers"][yaml_key]["type"] = "http";
-            base_rule["rule-providers"][yaml_key]["behavior"] = "domain";
-            if(url[0] == '*')
-                base_rule["rule-providers"][yaml_key]["url"] = url.substr(1);
-            else
-                base_rule["rule-providers"][yaml_key]["url"] = remote_path_prefix + "/getruleset?type=3&url=" + urlSafeBase64Encode(url);
-            base_rule["rule-providers"][yaml_key]["path"] = "./providers/" + std::to_string(hash_(url)) + "_domain.yaml";
-            if(interval)
-                base_rule["rule-providers"][yaml_key]["interval"] = interval;
-        }
-        if(group_has_ipcidr)
-        {
-            std::string yaml_key = x;
-            if(rule_type[x] != RULESET_CLASH_IPCIDR)
-                yaml_key += " (IP-CIDR)";
-            base_rule["rule-providers"][yaml_key]["type"] = "http";
-            base_rule["rule-providers"][yaml_key]["behavior"] = "ipcidr";
-            if(url[0] == '*')
-                base_rule["rule-providers"][yaml_key]["url"] = url.substr(1);
-            else
-                base_rule["rule-providers"][yaml_key]["url"] = remote_path_prefix + "/getruleset?type=4&url=" + urlSafeBase64Encode(url);
-            base_rule["rule-providers"][yaml_key]["path"] = "./providers/" + std::to_string(hash_(url)) + "_ipcidr.yaml";
-            if(interval)
-                base_rule["rule-providers"][yaml_key]["interval"] = interval;
-        }
-        if(!group_has_domain && !group_has_ipcidr)
-        {
-            std::string yaml_key = x;
-            base_rule["rule-providers"][yaml_key]["type"] = "http";
-            base_rule["rule-providers"][yaml_key]["behavior"] = "classical";
-            if(url[0] == '*')
-                base_rule["rule-providers"][yaml_key]["url"] = url.substr(1);
-            else
-                base_rule["rule-providers"][yaml_key]["url"] = remote_path_prefix + "/getruleset?type=6&url=" + urlSafeBase64Encode(url);
-            base_rule["rule-providers"][yaml_key]["path"] = "./providers/" + std::to_string(hash_(url)) + ".yaml";
-            if(interval)
-                base_rule["rule-providers"][yaml_key]["interval"] = interval;
-        }
+        base_rule["rule-providers"][x]["type"] = "http";
+        base_rule["rule-providers"][x]["behavior"] = "classical";
+        base_rule["rule-providers"][x]["url"] = remote_path_prefix + "/getruleset?type=6&url=" + urlSafeBase64Encode(url);
+        base_rule["rule-providers"][x]["path"] = "./providers/" + std::to_string(hash_(url)) + ".yaml";
+        if(interval)
+            base_rule["rule-providers"][x]["interval"] = interval;
+
         if(script)
         {
             std::string json_path = "rules." + std::to_string(index) + ".";
-            parse_json_pointer(data, json_path + "has_domain", group_has_domain ? "true" : "false");
-            parse_json_pointer(data, json_path + "has_ipcidr", group_has_ipcidr ? "true" : "false");
+            parse_json_pointer(data, json_path + "has_domain", "false");
+            parse_json_pointer(data, json_path + "has_ipcidr", "false");
             parse_json_pointer(data, json_path + "name", x);
             parse_json_pointer(data, json_path + "group", name);
             parse_json_pointer(data, json_path + "set", "true");
-            parse_json_pointer(data, json_path + "keyword", keyword);
-            parse_json_pointer(data, json_path + "original", (rule_type[x] == RULESET_CLASH_DOMAIN || rule_type[x] == RULESET_CLASH_IPCIDR) ? "true" : "false");
+            parse_json_pointer(data, json_path + "keyword", "");
+            parse_json_pointer(data, json_path + "original", "false");
         }
         index++;
     }

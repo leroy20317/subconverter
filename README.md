@@ -89,9 +89,8 @@ Notes:
 1. `auto` is resolved from the request `User-Agent` in `src/handler/interfaces.cpp`.
 2. `mixed` outputs a regular Base64 subscription composed of supported single-node links.
 3. Shadowrocket users should usually use `ss`, `ssr`, `v2ray`, or `mixed`.
-4. Surge output is controlled by `target=surge` and optional `ver=<number>`. The current code path defaults to `ver=3` when `ver` is omitted.
-5. `AnyTLS` export for Surge requires `target=surge&ver=5`.
-6. Quantumult X `AnyTLS` export uses `tls-host` for standard TLS and automatically emits `reality-base64-pubkey` / `reality-hex-shortid` when those fields exist on the node.
+4. Surge output is controlled by `target=surge`.
+5. Quantumult X `AnyTLS` export uses `tls-host` for standard TLS and automatically emits `reality-base64-pubkey` / `reality-hex-shortid` when those fields exist on the node.
 
 ## Basic Usage
 
@@ -126,6 +125,33 @@ Example:
 
 ```txt
 http://127.0.0.1:25500/sub?target=clash&url=https%3A%2F%2Fexample.com%2Fsub
+```
+
+### Clash/mihomo Managed Rule Providers
+
+When a Clash/mihomo managed configuration is generated, remote `ruleset` entries are emitted as `rule-providers` with `behavior: classical`. Rules are no longer split into separate `domain` and `ipcidr` providers, so classical rules such as `DOMAIN-KEYWORD`, `DOMAIN-SUFFIX`, and `IP-CIDR` remain in the same provider.
+
+Example output:
+
+```yaml
+rules:
+  - RULE-SET,Example,Proxy
+
+rule-providers:
+  Example:
+    type: http
+    behavior: classical
+    url: http://127.0.0.1:25500/getruleset?type=6&url=...
+    path: ./providers/xxx.yaml
+```
+
+Example provider payload:
+
+```yaml
+payload:
+  - DOMAIN-SUFFIX,google.com
+  - DOMAIN-KEYWORD,google
+  - IP-CIDR,1.1.1.1/32,no-resolve
 ```
 
 Quick conversion helpers:
