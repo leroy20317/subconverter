@@ -1503,6 +1503,8 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 }
                 singleproxy["up"] >> up;
                 singleproxy["down"] >> down;
+                up = urlDecode(up);
+                down = urlDecode(down);
                 singleproxy["obfs"] >> obfsParam;
                 singleproxy["protocol"] >> type;
                 singleproxy["sni"] >> host;
@@ -1538,6 +1540,8 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                         }
                     }
                 }
+                up = urlDecode(up);
+                down = urlDecode(down);
                 singleproxy["obfs"] >>= obfsParam;
                 singleproxy["obfs-password"] >>= obfsPassword;
                 singleproxy["sni"] >>= host;
@@ -1690,8 +1694,8 @@ void explodeStdHysteria(std::string hysteria, Proxy &node) {
     auth_str = getUrlArg(addition, "auth_str");
     host = getUrlArg(addition, "peer");
     insecure = getUrlArg(addition, "insecure");
-    up = getUrlArg(addition, "upmbps");
-    down = getUrlArg(addition, "downmbps");
+    up = urlDecode(getUrlArg(addition, "upmbps"));
+    down = urlDecode(getUrlArg(addition, "downmbps"));
     alpn = getUrlArg(addition, "alpn");
     obfsParam = getUrlArg(addition, "obfsParam");
     sni = getUrlArg(addition, "peer");
@@ -1788,8 +1792,8 @@ void explodeStdHysteria2(std::string hysteria2, Proxy &node) {
     }
 
     scv = getUrlArg(addition, "insecure");
-    up = getUrlArg(addition, "up");
-    down = getUrlArg(addition, "down");
+    up = urlDecode(getUrlArg(addition, "up"));
+    down = urlDecode(getUrlArg(addition, "down"));
     alpn = getUrlArg(addition, "alpn");
     obfsParam = getUrlArg(addition, "obfs");
     obfsPassword = getUrlArg(addition, "obfs-password");
